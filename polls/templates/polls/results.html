@@ -1,0 +1,63 @@
+
+<html>
+<head>
+
+<title>Top in the world</title>
+<link href='https://fonts.googleapis.com/css?family=Share Tech Mono' rel='stylesheet'>
+<style>
+
+
+body {
+    font-family: 'Share Tech Mono';font-size: 22px;
+    background-color: black;
+}
+
+
+label {
+	font-size: 200%;
+    color: lime;
+}
+
+
+
+input {
+	border-radius: 133px;
+	font-size: 200%;
+
+	border-color: yellow;
+	border-width: 8px;
+	background-color: black;
+    color: orange;
+}
+
+input[type="radio"] {
+
+	border: 2px solid white;
+	height: 24px;
+	width: 24px;
+}
+
+</style>
+
+
+
+</head>
+
+
+<body style="color=orange;" ﻿link="yellow" alink="yellow" vlink="yellow" >
+
+<h1 style="color:orange"><a href="/">Main</a></h1>
+ 
+<h1 style="color: orange">{{ question.question_text }}</h1>
+
+<ul>
+{% for choice in question.choice_set.all %}
+    <li style="color: orange">{{ choice.choice_text }} -- {{ choice.votes }} vote{{ choice.votes|pluralize }}</li>
+{% endfor %}
+</ul>
+
+<a href="{% url 'polls:detail' question.id %}">Vote again?</a>
+
+</body>
+
+</html>
