@@ -3,41 +3,40 @@
 
 <title>Top in the world</title>
 <link href='https://fonts.googleapis.com/css?family=Share Tech Mono' rel='stylesheet'>
-<style>
-body {
-    font-family: 'Share Tech Mono';font-size: 22px;
-}
-</style>
+
+{% load static %}
+
+<link rel="stylesheet" type="text/css" href="{% static 'polls/style.css' %}" />
 
 </head>
 
-<body bgcolor="Black" link="yellow" alink="yellow" vlink="yellow">
-<H1 style="color:orange">SunraYLmtd 🍋🍋🍊🥕🥕</H1>
+<body>
+<H1>SunraYLmtd 🍋🍋🍊🥕🥕</H1>
 
 <p>
-<H1 tyle="color:yellow"><a href="/admin">admin</a></h1>
+<H1><a href="/admin">admin</a></h1>
 </p>
 
 <h2>
-
 
 {% load static %}
 
 <link rel="stylesheet" type="text/css" href="{% static 'polls/style.css' %}" />
 
 {% if latest_question_list %}
-    <ul style="color:orange">
+    <ul>
     {% for question in latest_question_list %}
-        <li ><a style="color:orange" href="{% url 'polls:detail' question.id %}">{{ question.question_text }}</a></li>
+        <li ><a href="{% url 'polls:detail' question.id %}">{{ question.question_text }}</a></li>
     {% endfor %}
     </ul>
 {% else %}
     <p>No polls are available.</p>
 {% endif %}
+
 </h2>
 
 <p>
-<H3 style="color:yellow"><a href="https://www.youtube.com/channel/UCZu-JP1plc5VlBQ1d-eG7cQ">YouTube</a>
+<H3><a href="https://www.youtube.com/channel/UCZu-JP1plc5VlBQ1d-eG7cQ">YouTube</a>
 <a href="https://www.twitch.tv/sunraylmtd">Twitch</a>
 <a href="https://www.instagram.com/sunraylmtd/">instagram</a>
 <a href="http://steamcommunity.com/profiles/76561197986015735">Steam</a>
