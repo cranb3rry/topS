@@ -4,55 +4,21 @@
 
 <title>Top in the world</title>
 <link href='https://fonts.googleapis.com/css?family=Share Tech Mono' rel='stylesheet'>
-<style>
 
+{% load static %}
 
-body {
-    font-family: 'Share Tech Mono';font-size: 22px;
-    background-color: black;
-}
-
-
-label {
-	font-size: 200%;
-    color: lime;
-}
-
-
-
-input {
-	border-radius: 133px;
-	font-size: 200%;
-	
-	border-color: yellow;
-	border-width: 8px;
-	background-color: black;
-    color: orange;
-}
-
-input[type="radio"] {
-	-webkit-appearance: checkbox; /* Chrome, Safari, Opera */
-    -moz-appearance: checkbox;    /* Firefox */
-    -ms-appearance: checkbox;     /* not currently supported */
-	border: 2px solid white;
-	height: 24px;
-	width: 24px;
-}
-
-</style>
-
-
+<link rel="stylesheet" type="text/css" href="{% static 'polls/style.css' %}" />
 
 </head>
 
 
-<body style="color:orange;" l﻿ink="yellow" alink="yellow" vlink="yellow" >
+<body>
 
-<h1 style="color:orange"><a href="/">Main</a></h1>
+<h1><a href="/">Main</a></h1>
 
-<h1 style="color: orange">{{ question.question_text }} <br> 🍋🍋🍊🥕🥕</h1>
+<h1>{{ question.question_text }} <br> 🍋🍋🍊🥕🥕</h1>
 
-{% if error_message %}<p style="color: orange"><strong>{{ error_message }}</strong></p>{% endif %}
+{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
 
 <form action="{% url 'polls:vote' question.id %}" method="post">
 {% csrf_token %}
