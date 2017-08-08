@@ -2,17 +2,37 @@ li a {
     color: green;
 }
 
-
 h1 {
 	color: #F2552C;
 }
 
 body {
     font-family: 'Share Tech Mono';font-size: 22px;
-
 }
 
 a {
-    color: #F6D155; 
+    color: #F6D155;
 }
 
+input {
+	border-radius: 133px;
+	font-size: 200%;
+	border-color: yellow;
+	border-width: 8px;
+    color: #F2552C;
+
+}
+
+input[type="radio"] {
+ 	-webkit-appearance: checkbox; /* Chrome, Safari, Opera */
+    -moz-appearance: checkbox;    /* Firefox */
+    -ms-appearance: checkbox;     /* not currently supported */
+ 	border: 2px solid white;
+ 	height: 24px;
+ 	width: 24px;
+}
+
+label {
+ 	font-size: 200%;
+    color: green;
+}

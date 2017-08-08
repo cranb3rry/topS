@@ -17,12 +17,22 @@ a {
 input {
 	border-radius: 133px;
 	font-size: 200%;
-
 	border-color: yellow;
 	border-width: 8px;
-	background-color: black;
-    color: orange;
+    color: #F2552C;
+
 }
 
+input[type="radio"] {
+ 	-webkit-appearance: checkbox; /* Chrome, Safari, Opera */
+    -moz-appearance: checkbox;    /* Firefox */
+    -ms-appearance: checkbox;     /* not currently supported */
+ 	border: 2px solid white;
+ 	height: 24px;
+ 	width: 24px;
+}
 
-
+label {
+ 	font-size: 200%;
+    color: green;
+}
