@@ -33,6 +33,7 @@ ALLOWED_HOSTS = [
 # Application definition
 
 INSTALLED_APPS = [
+    'toptv.apps.ToptvConfig',
     'home.apps.HomeConfig',
     'polls.apps.PollsConfig',
     'django.contrib.admin',
