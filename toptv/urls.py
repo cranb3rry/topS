@@ -3,5 +3,6 @@ from django.conf.urls import url
 from . import views
 
 urlpatterns = [
-    url(r'^$', views.index, name='index'),
+    url(r'^$', views.hls, name='hls'),
+    url(r'^hls/', views.hls, name='hls')
 ]

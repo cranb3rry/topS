@@ -27,3 +27,46 @@ def index(request):
 </script>
 </body>
 </html> ''')
+
+def hls(request):
+    return HttpResponse('''
+<!DOCTYPE html>
+<html>
+<head>
+<title>HLS Stream</title>
+<style>
+    body {
+       
+    }
+</style>
+</head>
+<body>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<video id="video" width="1280" height="720" controls></video>
+<script>
+  if(Hls.isSupported()) {
+    var video = document.getElementById('video');
+    var hls = new Hls();
+    hls.loadSource('http://94.158.191.180:81/hls/test.m3u8');
+    hls.attachMedia(video);
+    hls.on(Hls.Events.MANIFEST_PARSED,function() {
+      video.play();
+  });
+ }
+</script>
+<audio controls autoplay id="myaudio"><source src="http://noeight.net:888/top7.ogg" type="application/ogg" /></audio>
+
+<script>
+  var audio = document.getElementById("myaudio");
+  audio.volume = 0.3;
+</script>
+
+<iframe frameborder="0" 
+        scrolling="no" 
+        id="chat_embed" 
+        src="http://www.twitch.tv/sunraylmtd/chat" 
+        height="640" 
+        width="320">
+</iframe>
+</body>
+</html>''')
