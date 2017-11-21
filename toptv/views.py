@@ -61,12 +61,30 @@ def hls(request):
   audio.volume = 0.3;
 </script>
 
-<iframe frameborder="0" 
-        scrolling="no" 
-        id="chat_embed" 
-        src="http://www.twitch.tv/sunraylmtd/chat" 
-        height="640" 
-        width="320">
-</iframe>
+<p id="radioadmin"></p>
+<p id="radioartist"></p>
+<p id="radiosong"></p>
+
+<script>
+
+var myRadioadmin = document.getElementById("radioadmin");
+var myRadioartist = document.getElementById("radioartist");
+var myRadiosong = document.getElementById("radiosong");
+
+setInterval(function() {
+fetch('http://noeight.net:888/status-json.xsl')
+.then((resp) => resp.json())
+.then(function(json) {
+  var stats = json.icestats
+  var radio = stats.source
+    myRadioadmin.innerHTML = '';
+    myRadioartist.innerHTML = radio.artist;
+    myRadiosong.innerHTML = radio.title;
+    })  
+}, 100);
+
+
+  </script>
+
 </body>
 </html>''')
