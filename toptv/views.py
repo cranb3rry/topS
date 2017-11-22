@@ -70,6 +70,9 @@ def hls(request):
 var myRadioadmin = document.getElementById("radioadmin");
 var myRadioartist = document.getElementById("radioartist");
 var myRadiosong = document.getElementById("radiosong");
+var myRadioartistPr = ''
+var myRadiosongPr = '' 
+
 
 setInterval(function() {
 fetch('http://noeight.net:888/status-json.xsl')
@@ -77,9 +80,24 @@ fetch('http://noeight.net:888/status-json.xsl')
 .then(function(json) {
   var stats = json.icestats
   var radio = stats.source
-    myRadioadmin.innerHTML = '';
-    myRadioartist.innerHTML = radio.artist;
+
+
+  if (radio.title != myRadiosongPr) {
     myRadiosong.innerHTML = radio.title;
+    myRadiosongPr = radio.title;
+    
+  }
+
+  if (radio.artist != myRadioartistPr) {
+    myRadioartist.innerHTML = radio.artist;
+    myRadioartistPr = radio.artist;
+    
+  }
+
+
+    myRadioadmin.innerHTML = '';
+    
+    
     })  
 }, 100);
 
