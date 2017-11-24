@@ -33,6 +33,7 @@ ALLOWED_HOSTS = [
 # Application definition
 
 INSTALLED_APPS = [
+    'topr.apps.ToprConfig'
     'toptv.apps.ToptvConfig',
     'home.apps.HomeConfig',
     'polls.apps.PollsConfig',
