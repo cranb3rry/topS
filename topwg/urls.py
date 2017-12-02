@@ -1,7 +1,7 @@
 from django.conf.urls import url
 
-from topwg.views import MyView
+from topwg.views import MyView, TopWgHome
 
 urlpatterns = [
-    url(r'^$', MyView.as_view(), name='my-view'),
+    url(r'^$', TopWgHome.as_view(), name='index'),
 ]

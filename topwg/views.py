@@ -11,6 +11,7 @@ class MyView(View):
     def get(self, request, *args, **kwargs):
         return HttpResponse('Hello, World!')
 
-class HomePageView(TemplateView):
+class TopWgHome(TemplateView):
 
-    template_name = "home.html"
+    template_name = "topwg/index.html"
+
