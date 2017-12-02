@@ -34,6 +34,7 @@ ALLOWED_HOSTS = [
 # Application definition
 
 INSTALLED_APPS = [
+    'topwg.apps.TopwgConfig',
     'topr.apps.ToprConfig',
     'toptv.apps.ToptvConfig',
     'home.apps.HomeConfig',

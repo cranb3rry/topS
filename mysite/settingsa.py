@@ -27,13 +27,14 @@ DEBUG = False
 
 ALLOWED_HOSTS = [
     "noeight.net",
-    "localhost"	
+    "www.noeight.net"
 ]
 
 
 # Application definition
 
 INSTALLED_APPS = [
+    'topwg.apps.TopwgConfig',
     'topr.apps.ToprConfig',
     'toptv.apps.ToptvConfig',
     'home.apps.HomeConfig',
