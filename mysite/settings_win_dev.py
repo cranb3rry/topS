@@ -27,7 +27,8 @@ DEBUG = True
 
 ALLOWED_HOSTS = [
     "noeight.net",
-    "www.noeight.net"
+    "www.noeight.net",
+    "localhost"
 ]
 
 
