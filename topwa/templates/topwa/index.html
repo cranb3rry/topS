@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>webassembly fibonacci recursive</title>
+  <link rel="stylesheet" href="/static/home/styles.css">
+  <link rel="shortcut icon" href="/static/polls/favicon.ico.png"/>
+</head>
+<body>
+
+<div id="fibn" >
+
+</div>
+
+<script type="text/javascript">
+
+	var wasmCode = new Uint8Array([0,97,115,109,1,0,0,0,1,134,128,128,128,0,1,96,1,127,1,127,3,130,128,128,128,0,1,0,4,132,128,128,128,0,1,112,0,0,5,131,128,128,128,0,1,0,1,6,129,128,128,128,0,0,7,144,128,128,128,0,2,6,109,101,109,111,114,121,2,0,3,102,105,98,0,0,10,203,128,128,128,0,1,197,128,128,128,0,1,1,127,2,64,32,0,65,1,106,34,1,65,3,79,13,0,32,1,65,2,116,65,12,106,40,2,0,15,11,2,64,32,0,65,1,72,13,0,32,0,65,127,106,16,0,32,0,65,126,106,16,0,106,15,11,32,0,65,2,106,16,0,32,1,16,0,107,11,11,146,128,128,128,0,1,0,65,12,11,12,1,0,0,0,0,0,0,0,1,0,0,0]);
+
+var wasmModule = new WebAssembly.Module(wasmCode);
+var wasmInstance = new WebAssembly.Instance(wasmModule, []);
+
+for (i = 0; i < 32; i++) { 
+	var para = document.createElement("p");
+	var node = document.createTextNode((i + ' ' + wasmInstance.exports.fib(i)));
+	para.appendChild(node);
+	var element = document.getElementById("fibn");
+	element.appendChild(para);
+}
+
+</script>
+
+</body>
+</html>
