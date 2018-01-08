@@ -12,7 +12,7 @@ https://docs.djangoproject.com/en/1.11/ref/settings/
 
 import sys
 import os
-sys.path.append(os.path.abspath("/conf"))
+sys.path.append(os.path.abspath("../config"))
 from config import *
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
