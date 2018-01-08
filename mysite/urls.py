@@ -23,6 +23,7 @@ urlpatterns = [
     url(r'^topwa/', include('topwa.urls')),
     url(r'^topwg/', include('topwg.urls')),
     url(r'^toptv/', include('toptv.urls')),
+    url(r'^tw/', include('tw.urls')),
     url(r'^topr/', include('topr.urls')),
 	url(r'^', include('home.urls')),
 	url(r'^', include('polls.urls')),

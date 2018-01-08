@@ -9,8 +9,10 @@ https://docs.djangoproject.com/en/1.11/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.11/ref/settings/
 """
-
+import sys
 import os
+sys.path.append(os.path.abspath("C:/Users/1/Desktop/conf"))
+from config import *
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -35,6 +37,7 @@ ALLOWED_HOSTS = [
 # Application definition
 
 INSTALLED_APPS = [
+    'tw',
     'topfeed',
     'topwa.apps.TopwaConfig',
     'topwg.apps.TopwgConfig',
@@ -132,3 +135,7 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, "static/")
 MEDIA_ROOT = os.path.join(BASE_DIR, "media/")
 MEDIA_URL = '/media/'
+
+
+TwitchClientID = os.environ.get('TwitchClientID')
+TwitchAuth = os.environ.get('TwitchAuth')
