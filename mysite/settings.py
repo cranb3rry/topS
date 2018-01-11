@@ -12,7 +12,7 @@ https://docs.djangoproject.com/en/1.11/ref/settings/
 
 import sys
 import os
-sys.path.append(os.path.abspath("../config"))
+sys.path.append(os.path.abspath("../conf"))
 from config import *
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -37,6 +37,7 @@ ALLOWED_HOSTS = [
 # Application definition
 
 INSTALLED_APPS = [
+    'rest_framework',
     'tw',
     'topfeed',
     'topwa.apps.TopwaConfig',

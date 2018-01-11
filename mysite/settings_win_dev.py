@@ -11,7 +11,8 @@ https://docs.djangoproject.com/en/1.11/ref/settings/
 """
 import sys
 import os
-sys.path.append(os.path.abspath("C:/Users/1/Desktop/conf"))
+sys.path.append(os.path.abspath("../conf"))
+
 from config import *
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -37,6 +38,8 @@ ALLOWED_HOSTS = [
 # Application definition
 
 INSTALLED_APPS = [
+    'rest_framework',
+    'djcelery',
     'tw',
     'topfeed',
     'topwa.apps.TopwaConfig',
@@ -139,3 +142,5 @@ MEDIA_URL = '/media/'
 
 TwitchClientID = os.environ.get('TwitchClientID')
 TwitchAuth = os.environ.get('TwitchAuth')
+
+CELERY_RESULT_BACKEND='djcelery.backends.database:DatabaseBackend'
