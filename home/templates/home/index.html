@@ -33,6 +33,11 @@
       	<h3 class="green_8">Ut enim ad</h3>
       	<p>Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
       </article>
+<p>
+</br></br></br>
+  tw: <span id="subs">??</span>, <span id="views">??</span>, <span id="status">??</span>.
+</p>
+       
     </div>
     <aside>
     	<figure>
@@ -42,9 +47,67 @@
     	<h2 class="green_dot">Duis aute irure</h2>
     	<p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
     </aside>
+
     <footer class="green_dot">
-    	2018
+    	2018 
     </footer>
   </div>
+<div>
+
+
+</div>
+
+<script type="text/javascript">
+
+var subshm = document.getElementById("subs");
+var viewshm = document.getElementById("views");
+var statushm = document.getElementById("status");
+var subsPr = ''
+var viewsPr = ''
+var statusPr = '??'
+
+setInterval(function() {
+fetch('http://noeight.net/tw/api/twitchstat/1/?format=json')
+.then((resp) => resp.json())
+.then(function(json) {
+
+  var subs = json.subs
+  var views = json.views
+  var status = json.status
+
+
+
+  if (subs != subsPr) {
+    subshm.innerHTML = subs;
+    subsPr = subs;
+    
+  }
+
+  if (views != viewsPr) {
+    viewshm.innerHTML = views;
+    viewsPr = views;
+    
+  }
+
+    if (status != statusPr) 
+          if (status) {
+      status = 'on'
+      statushm.className="green_8"
+    } else {
+      status = 'off'
+      statushm.className=""
+    }
+    {
+    statushm.innerHTML = status;
+    statusPr = status;
+    
+  }
+    
+    })  
+}, 128);
+
+</script>
+
+
 </body>
 </html>
