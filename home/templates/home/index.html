@@ -67,7 +67,7 @@ var viewsPr = ''
 var statusPr = '??'
 
 setInterval(function() {
-fetch('http://noeight.net/tw/api/twitchstat/1/?format=json')
+fetch('/tw/api/twitchstat/1/?format=json')
 .then((resp) => resp.json())
 .then(function(json) {
 
