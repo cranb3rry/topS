@@ -37,6 +37,8 @@ ALLOWED_HOSTS = [
 # Application definition
 
 INSTALLED_APPS = [
+    'django_celery_beat',
+    'django_celery_results',
     'rest_framework',
     'tw',
     'topfeed',
@@ -149,3 +151,5 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media/")
 
 TwitchClientID = os.environ.get('TwitchClientID')
 TwitchAuth = os.environ.get('TwitchAuth')
+
+CELERY_RESULT_BACKEND = 'django-cache'
