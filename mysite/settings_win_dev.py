@@ -38,6 +38,8 @@ ALLOWED_HOSTS = [
 # Application definition
 
 INSTALLED_APPS = [
+    'sn',
+    'flask',
     'rest_framework',
     'djcelery',
     'tw',

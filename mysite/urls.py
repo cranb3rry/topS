@@ -19,6 +19,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
+    url(r'^sn/', include('sn.urls')),
     url(r'^topfeed/', include('topfeed.urls')),
     url(r'^topwa/', include('topwa.urls')),
     url(r'^topwg/', include('topwg.urls')),

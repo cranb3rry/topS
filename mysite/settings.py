@@ -37,6 +37,7 @@ ALLOWED_HOSTS = [
 # Application definition
 
 INSTALLED_APPS = [
+    'sn',
     'django_celery_beat',
     'django_celery_results',
     'rest_framework',

@@ -56,8 +56,9 @@ h2, footer {
 }
 
 aside {
-	width: 30%;
+	width: 310px;
 	float: right;
+	position: relative;
 }
 
 .green_8 {
