@@ -38,6 +38,10 @@
 </br></br></br>
   tw: <span id="subs">??</span>, <span id="views">??</span>, <span id="status">??</span>.
 </p>
+
+<p>
+  yt: <span id="yt_subs">??</span>, <span id="yt_views">??</span>, <span id="yt_status">??</span>.
+</p>
        
     </div>
     <aside id="right">
@@ -67,11 +71,19 @@ var subsPr = ''
 var viewsPr = ''
 var statusPr = '??'
 
+var ytsubshm = document.getElementById("yt_subs");
+var ytviewshm = document.getElementById("yt_views");
+var ytstatushm = document.getElementById("yt_status");
+var ytsubsPr = ''
+var ytviewsPr = ''
+var ytstatusPr = '??'
+
 setInterval(function() {
-fetch('/tw/api/twitchstat/1/?format=json')
+fetch('/tw/api/twitchstat/?format=json')
 .then((resp) => resp.json())
 .then(function(json) {
 
+  json = json[0]
   var subs = json.subs
   var views = json.views
   var status = json.status
@@ -105,7 +117,49 @@ fetch('/tw/api/twitchstat/1/?format=json')
   }
     
     })  
-}, 1024);
+}, 2000);
+
+setInterval(function() {
+fetch('/yt/api/YoutubeStat/?format=json')
+.then((resp) => resp.json())
+.then(function(json) {
+
+  json = json[0]
+  var subs = json.subs
+  var views = json.views
+  var status = json.status
+
+
+
+  if (subs != ytsubsPr) {
+    ytsubshm.innerHTML = subs;
+    ytsubsPr = subs;
+    
+  }
+
+  if (views != ytviewsPr) {
+    ytviewshm.innerHTML = views;
+    ytviewsPr = views;
+    
+  }
+
+    if (status != ytstatusPr) 
+          if (status) {
+      status = 'on'
+      ytstatushm.className="green_8"
+    } else {
+      status = 'off'
+      ytstatushm.className=""
+    }
+    {
+    ytstatushm.innerHTML = status;
+    ytstatusPr = status;
+    
+  }
+    
+    })  
+}, 2000);
+
 
 </script>
 

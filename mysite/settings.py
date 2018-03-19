@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/1.11/ref/settings/
 
 import sys
 import os
+import environ
+
 sys.path.append(os.path.abspath("../conf"))
 from config import *
 
@@ -26,17 +28,23 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'uoj!tv)jhv_s-^fb-im)mr5ei99@5^50qwz3)nkuk!#tba+cee'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+
+if os.name == 'nt':
+    DEBUG = True
+else:
+    DEBUG = False
 
 ALLOWED_HOSTS = [
     "noeight.net",
-    "www.noeight.net"
+    "www.noeight.net",
+    "localhost"
 ]
 
 
 # Application definition
 
 INSTALLED_APPS = [
+    'yt.apps.YtConfig',
     'sn',
     'django_celery_beat',
     'django_celery_results',
@@ -152,5 +160,6 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media/")
 
 TwitchClientID = os.environ.get('TwitchClientID')
 TwitchAuth = os.environ.get('TwitchAuth')
+YoutubeAPI = os.environ.get('YoutubeAPI')
 
 CELERY_RESULT_BACKEND = 'django-cache'
