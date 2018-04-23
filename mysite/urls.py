@@ -19,6 +19,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
+    url(r'^chat/', include('chat.urls')),
     url(r'^yt/', include('yt.urls')),
     url(r'^sn/', include('sn.urls')),
     url(r'^topfeed/', include('topfeed.urls')),

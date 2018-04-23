@@ -44,6 +44,7 @@ ALLOWED_HOSTS = [
 # Application definition
 
 INSTALLED_APPS = [
+    'chat',
     'yt.apps.YtConfig',
     'sn',
     'django_celery_beat',
