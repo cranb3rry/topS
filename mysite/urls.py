@@ -19,6 +19,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
+    url(r'^ue4/', include('ue4.urls')),
     url(r'^chat/', include('chat.urls')),
     url(r'^yt/', include('yt.urls')),
     url(r'^sn/', include('sn.urls')),

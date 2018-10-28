@@ -1,8 +1,9 @@
-body {	
+body, textarea, input {	
 	font-family: Antiquarius;
 	font-size: 100%;
 	background: white;
 }
+
 
 @font-face {
 	font-family: 'Antiquarius';

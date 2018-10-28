@@ -3,10 +3,6 @@
 #include <string>
 
 
-#include <iostream>
-#include <string>
-
-
 int main()
 {
     std::string name1, phone1, address1;

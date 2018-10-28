@@ -47,7 +47,7 @@ def hls(request):
   if(Hls.isSupported()) {
     var video = document.getElementById('video');
     var hls = new Hls();
-    hls.loadSource('http://94.158.191.180:81/hls/test.m3u8');
+    hls.loadSource('http://46.188.104.83:81/hls/test.m3u8');
     hls.attachMedia(video);
     hls.on(Hls.Events.MANIFEST_PARSED,function() {
       video.play();
