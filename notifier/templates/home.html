@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+{% load staticfiles %}
+<html>
+<head>
+	<title>Notifi2er</title>
+	<link rel="stylesheet" href="/static/home/styles.css">
+    <link rel="shortcut icon" href="/static/polls/favicon.ico.png"/>
+</head>
+<body>
+	<p id=message></p>
+
+	<script type="text/javascript">
+	var wSocket = new WebSocket(
+        'ws://' + window.location.host +
+        '/ws/nt/');
+
+    wSocket.onmessage = function(e) {
+        document.querySelector('#message').innerHTML = e.data;
+    };
+
+	</script>
+</body>
+</html>

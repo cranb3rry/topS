@@ -19,6 +19,8 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
+    url(r'^nt/', include('notifier.urls')),
+    url(r'^ue4/', include('ue4.urls')),
     url(r'^ue4/', include('ue4.urls')),
     url(r'^chat/', include('chat.urls')),
     url(r'^yt/', include('yt.urls')),

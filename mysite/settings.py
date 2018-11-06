@@ -44,21 +44,22 @@ ALLOWED_HOSTS = [
 # Application definition
 
 INSTALLED_APPS = [
+    'notifier',
     'channels',
     'ue4',
     'chat',
-    'yt.apps.YtConfig',
+    'yt',
     'sn',
     'django_celery_beat',
     'django_celery_results',
     'rest_framework',
     'tw',
     'topfeed',
-    'topwa.apps.TopwaConfig',
-    'topwg.apps.TopwgConfig',
-    'topr.apps.ToprConfig',
-    'toptv.apps.ToptvConfig',
-    'home.apps.HomeConfig',
+    'topwa',
+    'topwg',
+    'topr',
+    'toptv',
+    'home',
     'polls.apps.PollsConfig',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -98,14 +99,14 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'mysite.wsgi.application'
 ASGI_APPLICATION = "mysite.routing.application"
-CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels_redis.core.RedisChannelLayer',
-        'CONFIG': {
-            "hosts": [('127.0.0.1', 6379)],
-        },
-    },
-}
+# CHANNEL_LAYERS = {
+#     'default': {
+#         'BACKEND': 'channels_redis.core.RedisChannelLayer',
+#         'CONFIG': {
+#             "hosts": [('127.0.0.1', 6379)],
+#         },
+#     },
+# }
 
 # Database
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases
@@ -174,3 +175,6 @@ TwitchAuth = os.environ.get('TwitchAuth')
 YoutubeAPI = os.environ.get('YoutubeAPI')
 
 CELERY_RESULT_BACKEND = 'django-cache'
+CELERYBEAT_SCHEDULER = 'djcelery.schedulers.DatabaseScheduler'
+CELERY_LOADER = 'mysite.CustomDjangoLoader'
+os.environ['CELERY_LOADER'] = CELERY_LOADER

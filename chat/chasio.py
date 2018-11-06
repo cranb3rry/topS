@@ -1,7 +1,6 @@
 import asyncio
 import logging
 import sys, time
-from aio_pika import connect_robust, Message
 import colorama
 from colorama import init, Fore, Back, Style
 init()
@@ -77,42 +76,6 @@ log = logging.getLogger('main')
 event_loop = asyncio.get_event_loop()
 
 async def echo_client(address, login):
-
-	connection = await connect_robust("amqp://guest:guest@127.0.0.1/", loop=event_loop)
-
-	queue_name = "test_queue"
-	routing_key = "test_queue"
-
-	# Creating channel
-	channel = await connection.channel()
-
-	# Declaring exchange
-	exchange = await channel.declare_exchange('direct', auto_delete=True)
-
-	# Declaring queue
-	queue = await channel.declare_queue(queue_name, auto_delete=True)
-
-	# Binding queue
-	await queue.bind(exchange, routing_key)
-
-	await exchange.publish(
-		Message(
-			bytes('Hello', 'utf-8'),
-			content_type='text/plain',
-			headers={'foo': 'bar'}
-		),
-		routing_key
-	)
-
-	# Receiving message
-	incoming_message = await queue.get(timeout=5)
-
-	# Confirm message
-	incoming_message.ack()
-
-	await queue.unbind(exchange, routing_key)
-	await queue.delete()
-	await connection.close()
 
 	log = logging.getLogger('echo_client')
 	log.debug('connecting to {} port {}'.format(*address))
