@@ -23,6 +23,8 @@
         var data = JSON.parse(e.data);
         var message = data['message'];
         document.querySelector('#chat-log').value += (message + '\n');
+        var textarea = document.querySelector("#chat-log");
+        textarea.scrollTop = textarea.scrollHeight;
     };
 
     chatSocket.onclose = function(e) {

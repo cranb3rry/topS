@@ -2,7 +2,11 @@ body, textarea, input {
 	font-family: Antiquarius;
 	font-size: 100%;
 	background: white;
+	overflow-y: scroll;
+    scroll-behavior: auto;
+
 }
+
 
 
 @font-face {
@@ -15,6 +19,8 @@ body, textarea, input {
 	float: left;
 	width: 60%;
 }
+
+
 
 header {
 	height: 44px;

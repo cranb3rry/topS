@@ -23,11 +23,13 @@ class EchoConsumer(AsyncJsonWebsocketConsumer):
     async def connect(self):
 
         await self.accept()
-        #while True:
-        await self.send_json('1')
-        await asyncio.sleep(1)
-        await self.send_json('2')
-        await asyncio.sleep(1)
+        # while True:
+        #     await self.send_json('1')
+        #     await asyncio.sleep(1)
+        #     await self.send_json('2')
+        #     await asyncio.sleep(1)
+
+        # await self.channel_layer.group_add("chat", self.channel_name)
 
         # reader, writer = await asyncio.open_connection(*SERVER_ADDRESS)
 
@@ -41,12 +43,12 @@ class EchoConsumer(AsyncJsonWebsocketConsumer):
         #     data = await reader.read(1024)
         #     print(data)
 
+
     async def disconnect(self, close_code):
         print(close_code)
 
-        # async def receive(self, event):
-        #     await self.send({
-        #         "type": "websocket.send",
-        #         "text": event["text"],
-        #     })
-        # 
+    async def chat_message(self, event):
+        await self.send({
+            "type": "websocket.send",
+            "text": event["text"],
+        })

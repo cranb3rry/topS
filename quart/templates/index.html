@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <script src="https://softvelum.com/player/releases/sldp-v2.11.0.min.js"></script>
+    <style type="text/css">
+
+* {
+  font-family: Bahnschrift;
+}
+
+textarea {
+  font-size: 22px;
+  font-family: Bahnschrift;
+  float: top;
+  float: right;
+  position: relative;
+}
+input {
+
+  position: relative;
+  float: right;
+  float: bottom;
+}
+
+
+#player {
+
+  float: left;
+  position: relative;
+}
+
+#rt {
+
+  float: right;
+  position: relative;
+}
+
+    </style>
+  </head>
+  <body>
+    <div id="player"></div>
+<!-- <video width="320" height="240" autoplay>
+  <source src="http://download.tsi.telecom-paristech.fr/gpac/dataset/dash/uhd/mux_sources/hevcds_1080p60_Main10_8M.mp4" type="video/mp4">
+Your browser does not support the video tag.
+</video> -->
+    <script type="text/javascript">
+      document.addEventListener("DOMContentLoaded", initPlayer);
+      var width = window.outerWidth/1.36
+
+      function initPlayer(){
+        sldpPlayer = SLDP.init({
+          container:          'player',
+          stream_url:         "ws://46.188.104.83:8081/app/live",
+          initial_resolution: '1080p',
+          buffering:          200,
+          autoplay:           true,
+          height:             (width*9)/16,
+          width:              width
+        });
+      };
+
+      function removePlayer(){
+        sldpPlayer.destroy()
+      }
+    </script>
+<div id="rt">
+      <textarea id="chat-log" rows=30 cols=36></textarea><br/>
+    <input id="chat-message-input" type="text"/><br/>
+    <input id="chat-message-submit" type="button" value="Send"/>
+</div>
+
+    <script>
+    var roomName = "lobby";
+
+    var chatSocket = new WebSocket(
+        'ws://' + window.location.host +
+        '/ws/chat/' + roomName + '/');
+
+    chatSocket.onmessage = function(e) {
+        var data = JSON.parse(e.data);
+        var message = data['message'];
+        document.querySelector('#chat-log').value += (message + '\n');
+    };
+
+    chatSocket.onclose = function(e) {
+        console.error('Chat socket closed unexpectedly');
+    };
+
+    document.querySelector('#chat-message-input').focus();
+    document.querySelector('#chat-message-input').onkeyup = function(e) {
+        if (e.keyCode === 13) {  // enter, return
+            document.querySelector('#chat-message-submit').click();
+        }
+    };
+
+    document.querySelector('#chat-message-submit').onclick = function(e) {
+        var messageInputDom = document.querySelector('#chat-message-input');
+        var message = messageInputDom.value;
+        chatSocket.send(JSON.stringify({
+            'message': message
+        }));
+        
+        messageInputDom.value = '';
+    };
+</script>
+  </body>
+</html>

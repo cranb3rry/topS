@@ -4,9 +4,16 @@ from celery import shared_task
 from tw.models import TwitchStat
 from mysite.settings import TwitchClientID
 
+
+
 @shared_task
 def add(x, y):
     return x + y
+
+@shared_task
+def add1(x=1, y=2):
+    while True:
+        return x + y
 
 @shared_task
 def tw():
