@@ -11,6 +11,8 @@
     <textarea id="chat-log" cols="60" rows="20"></textarea><br/>
     <input id="chat-message-input" type="text" size="60"/><br/>
     <input id="chat-message-submit" type="button" value="Send"/>
+     <input id="user-message-input" type="text" value=""/>
+     <input id="user-message-submit" type="button" value="Msg"/>
 </body>
 <script>
     var roomName = {{ room_name_json }};
@@ -41,10 +43,25 @@
     document.querySelector('#chat-message-submit').onclick = function(e) {
         var messageInputDom = document.querySelector('#chat-message-input');
         var message = messageInputDom.value;
+
         chatSocket.send(JSON.stringify({
-            'message': message
+            'message': message,
+            'user': 'user'
         }));
+
         
+        messageInputDom.value = '';
+    };
+
+
+    document.querySelector('#user-message-submit').onclick = function(e) {
+        var messageInputDom = document.querySelector('#user-message-input');
+        var message = messageInputDom.value;
+
+        chatSocket.send(JSON.stringify({
+            'vcm': message,
+        }));
+
         messageInputDom.value = '';
     };
 </script>

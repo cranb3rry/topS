@@ -17,6 +17,7 @@ def add1(x=1, y=2):
 
 @shared_task
 def tw():
+	
 	s = TwitchStat.objects.get(name='mainstats')
 
 	url_v = 'https://api.twitch.tv/helix/users?login=sunraylmtd'

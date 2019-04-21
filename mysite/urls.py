@@ -19,6 +19,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
+    url(r'^msg/', include('vcmesg.urls')),
     url(r'^nt/', include('notifier.urls')),
     url(r'^ue4/', include('ue4.urls')),
     url(r'^ue4/', include('ue4.urls')),
