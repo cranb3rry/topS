@@ -1,8 +1,16 @@
 
-
-from channels.generic.websocket import AsyncWebsocketConsumer
-import json, asyncio, time#, colorama
+from google.cloud import texttospeech
+from google.cloud import storage
 from googleapiclient.discovery import build
+from channels.generic.websocket import AsyncWebsocketConsumer
+import json, asyncio, time, uuid#, colorama
+from googleapiclient.discovery import build
+from threading import Thread as thr
+
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
+
+channel_layer = get_channel_layer()
 
 HOST = 'irc.chat.twitch.tv'
 PORT = 6667
@@ -10,6 +18,37 @@ PASS = 'oauth:17gvf82i0pjx40ffg5qdilvnm8rzem'
 NICK = 'sn_b0t'
 irc_channels = ['sn_b0t', 'sunraylmtd', 'f0ck_the_system', 'mangalebalo',
     'kolya_incorporated', 'xoaliro']
+
+print('CONSUMERS')
+
+def tts(vcmessage, name):
+
+    text = vcmessage
+    if len(text) > 128:
+        text = text[:127]
+    client = texttospeech.TextToSpeechClient()
+    synthesis_input = texttospeech.types.SynthesisInput(text=text)
+    voices = client.list_voices()
+
+    voice = texttospeech.types.VoiceSelectionParams(
+        language_code='uk-UA',
+        name='uk-UA-Wavenet-A')
+
+    audio_config = texttospeech.types.AudioConfig(
+        audio_encoding=texttospeech.enums.AudioEncoding.MP3)
+    response = client.synthesize_speech(synthesis_input, voice, audio_config)
+    storage_client = storage.Client()
+    bucket = storage_client.get_bucket('snry_bucket')
+    blob = bucket.blob(str(uuid.uuid4().hex)+'.mp3')
+    blob.upload_from_string(response.audio_content)
+    blob.make_public()
+
+    ttsmessage = {'message': [text, blob.public_url], 'type': 'voice_message', 'name': name}
+
+    #print(ttsmessage)
+    async_to_sync(channel_layer.group_send)(                
+        'voice', ttsmessage)
+    #return vcmesg.append(ttsmessage)
 
 def tw_irc_format(message, message_type):
     channel = ''
@@ -72,8 +111,7 @@ service = build('youtube', 'v3')
 waittime = 30000
 
 logged_ids = []
-from channels.layers import get_channel_layer
-channel_layer = get_channel_layer()
+
 
 async def log_messages(message, id):
     if id not in logged_ids:
@@ -81,7 +119,7 @@ async def log_messages(message, id):
         await channel_layer.group_send(
                 'chat_lobby',
             {
-                'type': 'chat_message',
+                'type': 'chat.message',
                 'message': message[4]+': '+message[1],
             }
         )
@@ -132,7 +170,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             print(message)
             if message == '':
                 self.irct.cancel()
-                print('CANSELED')
+                print('CANCELED')
                 self.irct = asyncio.create_task(self.irc())
             if message == "PING :tmi.twitch.tv\r\n":
                 writer.write('PONG :tmi.twitch.tv\r\n'.encode("utf-8"))
@@ -147,7 +185,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             await self.channel_layer.group_send(
                 'chat_lobby',
             {
-                'type': 'chat_message',
+                'type': 'chat.message',
                 'message': message,
             }
         )
@@ -156,6 +194,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         self.room_name = self.scope['url_route']['kwargs']['room_name']
         self.room_group_name = 'chat_%s' % self.room_name
+        print(self.room_name, self.room_group_name)
 
         # Join room group
         await self.channel_layer.group_add(
@@ -185,7 +224,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             await self.channel_layer.group_send(
                 self.room_group_name,
                 {
-                    'type': 'chat_message',
+                    'type': 'chat.message',
                     'message': message,
                 }
             )
@@ -196,8 +235,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
     # Receive message from room group
     async def chat_message(self, event):
         message = event['message']
-        #print(event)
-        print(self.scope)
+
+        print(1)
         if message == '!!':
             if not self.irc_on and self.room_name == 'lobby':
                 self.irct = asyncio.create_task(self.irc())
@@ -213,3 +252,45 @@ class ChatConsumer(AsyncWebsocketConsumer):
             await self.send(text_data=json.dumps({
                 'message': message,
             }))
+
+class VcmsgConsumer(AsyncWebsocketConsumer):
+
+    async def connect(self):
+
+        self.group = 'voice'
+
+        # Join group
+        await self.channel_layer.group_add(
+            self.group,
+            self.channel_name
+        )
+
+        await self.accept()
+        await self.send(json.dumps({'message': 'Voice Messages, Connected',
+            'type': 'greet'}))
+
+    async def disconnect(self, close_code):
+        await self.channel_layer.group_discard('voice', self.channel_name)
+
+    # Receive message from WebSocket
+    async def receive(self, text_data):
+        print(text_data)
+        text_data_json = json.loads(text_data)
+        name = text_data_json.get("name", "")
+        vcmessage = text_data_json.get("vcm", "")
+        if vcmessage:
+            thr(target=tts, args=(vcmessage, name )).start()
+        if text_data == '{"ctrl":"skip"}':
+            print(1)
+            await self.channel_layer.group_send(
+                'voice',
+                {
+                    'type': 'voice_skip',
+                }
+            )
+
+    async def voice_message(self, event):
+        await self.send(json.dumps(event))
+
+    async def voice_skip(self, event):
+         await self.send(json.dumps({'':'','type':'skip'}))

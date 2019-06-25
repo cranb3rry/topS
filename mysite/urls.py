@@ -17,8 +17,11 @@ from django.conf.urls import url, include
 from django.contrib import admin
 from django.conf import settings
 from django.conf.urls.static import static
+from chat.views import vcmsg, vcmsgwidget
 
 urlpatterns = [
+    url(r'^vcmsgwidget', vcmsgwidget, name='vcmsgwidget'),
+    url(r'^vcmsg', vcmsg, name='vcmsg'),
     url(r'^msg/', include('vcmesg.urls')),
     url(r'^nt/', include('notifier.urls')),
     url(r'^ue4/', include('ue4.urls')),

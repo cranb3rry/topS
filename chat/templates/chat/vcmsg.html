@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <link href="https://fonts.googleapis.com/css?family=Kosugi+Maru&display=swap" rel="stylesheet">
+</head>
+<style type="text/css">
+
+    body {
+        background-color: powderblue;
+        font-family: 'Kosugi Maru', sans-serif;
+        font-size: 150%;
+}
+</style>
+<body>
+<!-- <audio controls id='vmplayer'>
+  <source src="" id='vmsrc'>
+Your browser does not support the audio element.
+</audio> -->
+<p id='text'></p>
+  <input id="user-name-input" type="text" size="20" maxlength="20"/><br/>
+ <textarea id="user-message-input" type="text" cols="40" rows="4" maxlength="128"/></textarea>
+ <input id="user-message-submit" type="button" value="Send"/>
+ <input id="user-message-skip" type="button" value="Skip"/>
+<script type="text/javascript">
+
+var ws = new WebSocket(
+        'ws://' + window.location.host +
+        '/ws/vcmsg/')
+ws.onmessage = function (event) {
+    var element = document.getElementById("text");
+    // element.innerHTML = "";
+    var node = document.createElement("span");
+    var textnode = document.createTextNode(event.data+' ');         // Create a text node
+    node.appendChild(textnode);                              // Append the text to <li>
+    element.appendChild(node);     // Append <li> to <ul> with id="myList"
+
+};
+
+document.querySelector('#user-message-submit').onclick = function(e) {
+    var messageInputDom = document.querySelector('#user-message-input');
+    var message = messageInputDom.value;
+    var name = document.querySelector('#user-name-input').value;
+
+    ws.send(JSON.stringify({
+        'vcm': message, 'name': name,
+    }));
+
+    messageInputDom.value = '';
+};
+
+document.querySelector('#user-message-skip').onclick = function(e) {
+    ws.send(JSON.stringify({
+        'ctrl': 'skip',
+    }));
+
+
+};
+</script>
+</body>
+</html>

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <link href="https://fonts.googleapis.com/css?family=Kosugi+Maru|Play&display=swap" rel="stylesheet">
+</head>
+<style type="text/css">
+    body {
+        overflow: hidden;
+        color: Coral;
+        font-family: 'Play', sans-serif;
+        font-style: Bold;
+        font-size: 200%;
+}
+</style>
+<body>
+<audio id='vmplayer'>
+  <source src="" id='vmsrc'>
+Your browser does not support the audio element.
+</audio>
+
+<p id='text'></p>
+<script type="text/javascript">
+
+    var ws = new WebSocket(
+        'ws://' + window.location.host +
+        '/ws/vcmsg/')
+    var text = document.getElementById("text");
+    var node = document.createElement("span");
+
+    text.innerHTML = "";
+
+ws.onmessage = function (event) {
+
+    console.log(event.data)
+    var msg = JSON.parse(event.data);
+    switch(msg.type) {
+
+        case "voice_message":
+            var audio = document.getElementById('vmplayer');
+            var source = document.getElementById('vmsrc');
+            var textnode = document.createTextNode(msg.name+': '+msg.message[0]+' ');
+            node.appendChild(textnode); 
+            text.appendChild(node);
+            source.src = msg.message[1]
+            audio.load()
+            audio.play(); //call this to play the song right away
+            audio.onended = function() {
+                text.removeChild(node);
+                node.removeChild(textnode);
+
+            };
+            break
+        case "skip":
+            console.log('skip')
+            var audio = document.getElementById('vmplayer');
+            audio.pause()
+            node.innerHTML = "";
+            text.innerHTML = "skipped"
+            setTimeout(function(){
+                 text.innerHTML = ""
+            }, 2000);         
+            break
+        case "greet":
+            var textnode = document.createTextNode(msg.message);
+            node.appendChild(textnode);
+            text.appendChild(node);
+            setTimeout(function(){
+                text.removeChild(node);
+                node.removeChild(textnode);
+            }, 2000);   
+        // } else if ("tts" in JSON.parse(event.data)) {
+
+     //        console.log('2eqe');
+}
+};
+
+</script>
+</body>
+</html>
