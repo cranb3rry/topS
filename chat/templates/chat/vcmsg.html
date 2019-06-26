@@ -5,36 +5,80 @@
     <link href="https://fonts.googleapis.com/css?family=Kosugi+Maru&display=swap" rel="stylesheet">
 </head>
 <style type="text/css">
-
+p {
+  margin: 2px;
+}
     body {
         background-color: powderblue;
         font-family: 'Kosugi Maru', sans-serif;
         font-size: 150%;
 }
+    audio { 
+   display:none;
+}
+.vcmsg { 
+  color: fuchsia;
+}
+
 </style>
 <body>
-<!-- <audio controls id='vmplayer'>
+  <audio controls id='vmplayer'>
   <source src="" id='vmsrc'>
 Your browser does not support the audio element.
-</audio> -->
-<p id='text'></p>
+</audio>
+<div id='text'></div>
   <input id="user-name-input" type="text" size="20" maxlength="20"/><br/>
- <textarea id="user-message-input" type="text" cols="40" rows="4" maxlength="128"/></textarea>
+ <textarea id="user-message-input" type="text" cols="60" rows="6" maxlength="256"/></textarea>
  <input id="user-message-submit" type="button" value="Send"/>
- <input id="user-message-skip" type="button" value="Skip"/>
 <script type="text/javascript">
+
+    document.querySelector('#user-name-input').focus();
+    document.querySelector('#user-message-input').onkeyup = function(e) {
+        if (e.keyCode === 13) {  // enter, return
+            document.querySelector('#user-message-submit').click();
+        }
+    };
+
 
 var ws = new WebSocket(
         'ws://' + window.location.host +
         '/ws/vcmsg/')
 ws.onmessage = function (event) {
+    console.log(event.data)
+    var msg = JSON.parse(event.data);
     var element = document.getElementById("text");
-    // element.innerHTML = "";
-    var node = document.createElement("span");
-    var textnode = document.createTextNode(event.data+' ');         // Create a text node
-    node.appendChild(textnode);                              // Append the text to <li>
-    element.appendChild(node);     // Append <li> to <ul> with id="myList"
+    var node = document.createElement("p");
+    var audio = document.getElementById('vmplayer');
+    var source = document.getElementById('vmsrc');
 
+    switch(msg.type) {
+
+        case "voice_message":
+            var textnode = document.createTextNode(msg.name+': '+msg.message[0]+' ');
+            node.addEventListener('click', function(){
+                Array.prototype.forEach.call(document.getElementsByClassName('vcmsg'), function(el) {
+                        el.className=''
+                    });
+                node.className='vcmsg'
+                source.src = msg.message[1];
+                audio.load();
+                audio.play();
+                audio.onended = function() {
+                    node.className=''
+                };
+            });
+            break
+
+        case "skip":
+            var textnode = document.createTextNode('skip'+' ');    
+            break
+        case "greet":
+            var textnode = document.createTextNode(msg['message']+' ');    
+
+        }
+        node.appendChild(textnode);                             
+        element.appendChild(node);
+        node.scrollIntoView();
 };
 
 document.querySelector('#user-message-submit').onclick = function(e) {
@@ -49,13 +93,7 @@ document.querySelector('#user-message-submit').onclick = function(e) {
     messageInputDom.value = '';
 };
 
-document.querySelector('#user-message-skip').onclick = function(e) {
-    ws.send(JSON.stringify({
-        'ctrl': 'skip',
-    }));
 
-
-};
 </script>
 </body>
 </html>

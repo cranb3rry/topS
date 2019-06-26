@@ -7,12 +7,16 @@
     <link rel="shortcut icon" href="/static/polls/favicon.ico.png"/>
     <title>Chat Room</title>
 </head>
+<style type="text/css">
+    p {
+  margin: 4px;
+}
+</style>
 <body>
-    <textarea id="chat-log" cols="60" rows="20"></textarea><br/>
+    <div id="chat-log" cols="60" rows="20" readonly></div><br/>
     <input id="chat-message-input" type="text" size="60"/><br/>
     <input id="chat-message-submit" type="button" value="Send"/>
-     <input id="user-message-input" type="text" value=""/>
-     <input id="user-message-submit" type="button" value="Msg"/>
+      <input id="user-message-skip" type="button" value="Skip"/>
 </body>
 <script>
     var roomName = {{ room_name_json }};
@@ -22,12 +26,15 @@
         '/ws/chat/' + roomName + '/');
 
     chatSocket.onmessage = function(e) {
-        var data = JSON.parse(e.data);
-        var message = data['message'];
-        document.querySelector('#chat-log').value += (message + '\n');
-        var textarea = document.querySelector("#chat-log");
-        textarea.scrollTop = textarea.scrollHeight;
+    var element = document.getElementById("chat-log");
+    // element.innerHTML = "";
+    var node = document.createElement("p");
+    var textnode = document.createTextNode(JSON.parse(e.data)['message']+' '+'\n');    
+    node.appendChild(textnode);   
+    element.appendChild(node);   
+    node.scrollIntoView();
     };
+
 
     chatSocket.onclose = function(e) {
         console.error('Chat socket closed unexpectedly');
@@ -53,16 +60,41 @@
         messageInputDom.value = '';
     };
 
+    var wsvc = new WebSocket(
+        'ws://' + window.location.host +
+        '/ws/vcmsg/')
 
-    document.querySelector('#user-message-submit').onclick = function(e) {
-        var messageInputDom = document.querySelector('#user-message-input');
-        var message = messageInputDom.value;
 
-        chatSocket.send(JSON.stringify({
-            'vcm': message,
-        }));
+wsvc.onmessage = function (event) {
 
-        messageInputDom.value = '';
-    };
+    console.log(event.data)
+    var msg = JSON.parse(event.data);
+    var element = document.getElementById("chat-log");
+    var node = document.createElement("p");
+    node.className+='vcmsg' 
+    switch(msg.type) {
+        case "voice_message":
+            var textnode = document.createTextNode(msg.name+': '+msg.message[0]+' ');
+            break
+        case "skip":
+            var textnode = document.createTextNode('skip');          
+            break
+        case "greet":
+            var textnode = document.createTextNode(msg['message']);
+            break
+        }
+        node.appendChild(textnode);
+        element.appendChild(node);
+        node.scrollIntoView();
+};
+
+
+document.querySelector('#user-message-skip').onclick = function(e) {
+    wsvc.send(JSON.stringify({
+        'ctrl': 'skip',
+    }));
+
+
+};
 </script>
 </html>

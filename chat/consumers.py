@@ -24,8 +24,8 @@ print('CONSUMERS')
 def tts(vcmessage, name):
 
     text = vcmessage
-    if len(text) > 128:
-        text = text[:127]
+    if len(text) > 256:
+        text = text[:255]
     client = texttospeech.TextToSpeechClient()
     synthesis_input = texttospeech.types.SynthesisInput(text=text)
     voices = client.list_voices()

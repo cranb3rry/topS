@@ -6,7 +6,9 @@ body, textarea, input {
     scroll-behavior: auto;
 
 }
-
+.vcmsg { 
+  color: coral;
+}
 
 
 @font-face {
