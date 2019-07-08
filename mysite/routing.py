@@ -1,6 +1,7 @@
 from channels.auth import AuthMiddlewareStack
 from channels.routing import ProtocolTypeRouter, URLRouter, ChannelNameRouter
 import chat.routing
+import mapapp.routing
 from notifier.consumers import EchoConsumer
 from chat.consumers import ChatConsumer
 from django.conf.urls import url

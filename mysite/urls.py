@@ -18,13 +18,12 @@ from django.contrib import admin
 from django.conf import settings
 from django.conf.urls.static import static
 from chat.views import vcmsg, vcmsgwidget
+from django.urls import path
 
 urlpatterns = [
-    url(r'^vcmsgwidget', vcmsgwidget, name='vcmsgwidget'),
-    url(r'^vcmsg', vcmsg, name='vcmsg'),
-    url(r'^msg/', include('vcmesg.urls')),
-    url(r'^nt/', include('notifier.urls')),
-    url(r'^ue4/', include('ue4.urls')),
+    path('map/', include('mapapp.urls')),
+    path('vcmsgwidget/', vcmsgwidget, name='vcmsgwidget'),
+    path('vcmsg/', vcmsg, name='vcmsg'),
     url(r'^ue4/', include('ue4.urls')),
     url(r'^chat/', include('chat.urls')),
     url(r'^yt/', include('yt.urls')),

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+</head>
+<body>
+<p class="x"> 35awe</p>
+<p class="y"> 35awe</p>
+<p class="z"> 35awe</p>
+<p class="ln"> 35awe</p>
+<p class="lt"> 35awe</p>
+
+<script type="text/javascript">
+
+var coords = document.querySelector('.x');
+
+var mapSocket = new WebSocket(
+    'wss://' + window.location.host +
+    '/ws/map_s/');
+
+
+mapSocket.onmessage = function (event) {
+  coords.innerHTML = event.data
+};
+	
+</script>
+
+</body>
+</html>

@@ -41,7 +41,7 @@ Your browser does not support the audio element.
 
 
 var ws = new WebSocket(
-        'ws://' + window.location.host +
+        'wss://' + window.location.host +
         '/ws/vcmsg/')
 ws.onmessage = function (event) {
     console.log(event.data)
