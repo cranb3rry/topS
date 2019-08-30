@@ -9,16 +9,29 @@ p {
   margin: 2px;
 }
     body {
-        background-color: powderblue;
+        background-color: rgb(236, 240, 229);
         font-family: 'Kosugi Maru', sans-serif;
         font-size: 150%;
 }
     audio { 
    display:none;
 }
-.vcmsg { 
-  color: fuchsia;
+
+#choises {
+    color: rgb(73, 73, 73);
+    font-size: 16px;
 }
+
+.highlight,
+.count, 
+input:checked + label  { 
+  color: rgb(18, 145, 39);
+  font-size: 32px;
+}
+.count {
+    font-size: 16px;
+}
+
 
 </style>
 <body>
@@ -27,57 +40,149 @@ p {
 Your browser does not support the audio element.
 </audio>
 <div id='text'></div>
-  <input id="user-name-input" type="text" size="20" maxlength="20"/><br/>
- <textarea id="user-message-input" type="text" cols="60" rows="6" maxlength="256"/></textarea>
- <input id="user-message-submit" type="button" value="Send"/>
+  <input id="user-name-input" type="text" size="20" maxlength="20" placeholder="Nickname"/>
+  <span id="status"></span>
+  <br/>
+ <textarea id="user-message-input" type="text" cols="60" rows="6" maxlength="256" placeholder="Message text"/></textarea>
+  <input id="user-message-submit" type="button" value="Send ⏎" disabled/>
+
+<form id="choises">
+    <p id="vcs"></p>
+</form>
+
 <script type="text/javascript">
 
-    document.querySelector('#user-name-input').focus();
+    document.querySelector('#user-message-input').focus();
     document.querySelector('#user-message-input').onkeyup = function(e) {
         if (e.keyCode === 13) {  // enter, return
             document.querySelector('#user-message-submit').click();
         }
     };
 
+function resolveAfter2Seconds() {
+  return new Promise(resolve => {
+    setTimeout(() => {
+      resolve('resolved');
+    }, 2000);
+  });
+}
+
+async function clearGreet() {
+  console.log('calling');
+  var result = await resolveAfter2Seconds();
+  document.getElementById('greetnode').innerHTML = '';
+  // expected output: 'resolved'
+}
+
 
 var ws = new WebSocket(
         'wss://' + window.location.host +
         '/ws/vcmsg/')
+
+document.getElementById('status').innerHTML = 'connecting';
+
+
+// var status = ws.readyState
+
+ws.onopen = function(event) {
+  console.log("WebSocket is open now.");
+  document.getElementById('status').innerHTML = 'online';
+  document.getElementById("user-message-submit").disabled = false;
+};
+
+ws.onclose = function(event) {
+  console.log("WebSocket is closed now.");
+  document.getElementById('status').innerHTML = 'offline';
+};
+
 ws.onmessage = function (event) {
-    console.log(event.data)
     var msg = JSON.parse(event.data);
     var element = document.getElementById("text");
     var node = document.createElement("p");
     var audio = document.getElementById('vmplayer');
     var source = document.getElementById('vmsrc');
+    var choises = document.getElementById("choises");
+    var vcs = document.getElementById("vcs");
+    console.log(event.data)
 
     switch(msg.type) {
 
         case "voice_message":
             var textnode = document.createTextNode(msg.name+': '+msg.message[0]+' ');
             node.addEventListener('click', function(){
-                Array.prototype.forEach.call(document.getElementsByClassName('vcmsg'), function(el) {
+                Array.prototype.forEach.call(document.getElementsByClassName('highlight'), function(el) {
                         el.className=''
                     });
-                node.className='vcmsg'
+                node.className='highlight'
                 source.src = msg.message[1];
                 audio.load();
                 audio.play();
                 audio.onended = function() {
                     node.className=''
+                    document.querySelector('#user-message-input').focus();
                 };
             });
+
             break
 
         case "skip":
-            var textnode = document.createTextNode('skip'+' ');    
-            break
-        case "greet":
-            var textnode = document.createTextNode(msg['message']+' ');    
+            var textnode = document.createTextNode('skip'+' ');
 
+            break
+
+        case "greet":
+            var greetnode = document.createTextNode(msg['message']+' ');
+            greetnode.setAttribute("id", "greetnode");
+            console.log('greet')
+            break
+
+        case "voices_list":
+            var count = 0
+            voices = msg['message'].split(" ")
+            console.log(voices)
+
+            for (const voice of voices){
+                if (voice.includes("Wavenet")) {
+                    var edit = voice.substring(1, voice.length - 2);
+                    var edit2 = edit.replace('-Wavenet','');
+                    edit2 = count + 1 + '-' + edit2
+                    var radionode = document.createElement('input');
+                    var radiolabel = document.createElement('label');
+                    radionode.setAttribute("type", "radio");
+                    radionode.setAttribute("id", "radio" + count);
+                    radionode.setAttribute("name", "voice");
+                    radionode.setAttribute("value", edit);
+                    radiolabel.setAttribute("for", "radio" + count);
+                    radiolabel.innerHTML = edit2;
+                    if (voice.includes("ru-RU-Wavenet-B")) {
+                        radionode.checked = true;
+                    }                    
+                    choises.appendChild(radionode);
+                    choises.appendChild(radiolabel);
+                    count++
+                }
+                console.log(voice);
+                }
+            var number = document.createElement('span');
+            number.innerHTML = count;
+            var textnode2 = document.createTextNode(' preset are available:');
+            vcs.appendChild(number)
+            number.setAttribute('class', 'count');
+            vcs.appendChild(textnode2)
+            break
         }
-        node.appendChild(textnode);                             
-        element.appendChild(node);
+
+        if (textnode) {
+            node.appendChild(textnode);                             
+            element.appendChild(node);
+        }
+
+        if (greetnode) {
+                node.appendChild(greetnode);                             
+                element.appendChild(node);
+                clearGreet();
+        }
+
         node.scrollIntoView();
 };
 
@@ -85,14 +190,15 @@ document.querySelector('#user-message-submit').onclick = function(e) {
     var messageInputDom = document.querySelector('#user-message-input');
     var message = messageInputDom.value;
     var name = document.querySelector('#user-name-input').value;
+    var voice = document.getElementById("choises").elements["voice"].value;
 
     ws.send(JSON.stringify({
-        'vcm': message, 'name': name,
+        'vcm': message, 'name': name, 'voice': voice,
     }));
 
     messageInputDom.value = '';
+    document.querySelector('#user-message-input').focus();
 };
-
 
 </script>
 </body>

@@ -44,6 +44,7 @@ ALLOWED_HOSTS = [
 # Application definition
 
 INSTALLED_APPS = [
+    'donate',
     'mapapp',
     'social_django',
     'notifier',

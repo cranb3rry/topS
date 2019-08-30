@@ -18,3 +18,6 @@ class ChatMessage(models.Model):
 	pub_date = models.DateTimeField('date published')
 	def __str__(self):
 		return self.question_text
+
+class TwitchIrcChannels(models.Model):
+	username = models.CharField(max_length=20)

@@ -1,4 +1,5 @@
 
+
 from google.cloud import texttospeech
 from google.cloud import storage
 from googleapiclient.discovery import build
@@ -10,6 +11,8 @@ from threading import Thread as thr
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 
+from google.cloud.texttospeech import enums
+
 channel_layer = get_channel_layer()
 
 HOST = 'irc.chat.twitch.tv'
@@ -19,46 +22,49 @@ NICK = 'sn_b0t'
 irc_channels = ['sn_b0t', 'sunraylmtd', 'f0ck_the_system', 'mangalebalo',
     'kolya_incorporated', 'xoaliro']
 
-print('CONSUMERS')
+voices_list = []
 
 def list_voices():
     """Lists the available voices."""
-    from google.cloud import texttospeech
-    from google.cloud.texttospeech import enums
+
     client = texttospeech.TextToSpeechClient()
 
     # Performs the list voices request
     voices = client.list_voices()
 
     for voice in voices.voices:
-        # Display the voice's name. Example: tpc-vocoded
-        print('Name: {}'.format(voice.name))
 
-        # Display the supported language codes for this voice. Example: "en-US"
-        for language_code in voice.language_codes:
-            print('Supported language: {}'.format(language_code))
-
+        # # Display the voice's name. Example: tpc-vocoded
+        # print('Name: {}'.format(voice.name))
         ssml_gender = enums.SsmlVoiceGender(voice.ssml_gender)
+        # # Display the supported language codes for this voice. Example: "en-US"
+        # for language_code in voice.language_codes:
+        #     #print('Supported language: {}'.format(language_code))
+        #     voices_list.append(language_code)
+        voices_list.append([ssml_gender.name, voice.name, voice.language_codes])
 
-        # Display the SSML Voice Gender
-        print('SSML Voice Gender: {}'.format(ssml_gender.name))
 
-        # Display the natural sample rate hertz for this voice. Example: 24000
-        print('Natural Sample Rate Hertz: {}\n'.format(
-            voice.natural_sample_rate_hertz))
+        # # Display the SSML Voice Gender
+        # print('SSML Voice Gender: {}'.format(ssml_gender.name))
 
-def tts(vcmessage, name):
+        # # Display the natural sample rate hertz for this voice. Example: 24000
+        # print('Natural Sample Rate Hertz: {}\n'.format(
+        #     voice.natural_sample_rate_hertz))
+
+
+thr(target=list_voices).start()
+
+def tts(vcmessage, name, voice_preset):
 
     text = vcmessage
     if len(text) > 256:
         text = text[:255]
     client = texttospeech.TextToSpeechClient()
     synthesis_input = texttospeech.types.SynthesisInput(text=text)
-    voices = client.list_voices()
 
     voice = texttospeech.types.VoiceSelectionParams(
-        language_code='uk-UA',
-        name='uk-UA-Wavenet-A')
+        language_code=voice_preset[:-10],
+        name=voice_preset)
 
     audio_config = texttospeech.types.AudioConfig(
         audio_encoding=texttospeech.enums.AudioEncoding.MP3)
@@ -69,7 +75,7 @@ def tts(vcmessage, name):
     blob.upload_from_string(response.audio_content)
     blob.make_public()
 
-    ttsmessage = {'message': [text, blob.public_url], 'type': 'voice_message', 'name': name}
+    ttsmessage = {'message': [text, blob.public_url], 'type': 'voice_message', 'name': name, 'voice': voice_preset}
 
     #print(ttsmessage)
     async_to_sync(channel_layer.group_send)(                
@@ -267,7 +273,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
             if not self.irc_on and self.room_name == 'lobby':
                 self.irct = asyncio.create_task(self.irc())
                 asyncio.create_task(ytchat())
-                thr(target=list_voices).start()
                 print(self.irct)
                 self.irc_on = 1
         if message == '!!!':
@@ -295,6 +300,8 @@ class VcmsgConsumer(AsyncWebsocketConsumer):
         await self.accept()
         await self.send(json.dumps({'message': 'Voice Messages, Connected',
             'type': 'greet'}))
+        await self.send(json.dumps({'message': str(voices_list),
+            'type': 'voices_list'}))
 
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard('voice', self.channel_name)
@@ -305,8 +312,9 @@ class VcmsgConsumer(AsyncWebsocketConsumer):
         text_data_json = json.loads(text_data)
         name = text_data_json.get("name", "")
         vcmessage = text_data_json.get("vcm", "")
+        voice = text_data_json.get("voice", "")
         if vcmessage:
-            thr(target=tts, args=(vcmessage, name )).start()
+            thr(target=tts, args=(vcmessage, name, voice )).start()
         if text_data == '{"ctrl":"skip"}':
             print(1)
             await self.channel_layer.group_send(
