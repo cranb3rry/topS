@@ -46,7 +46,6 @@ ALLOWED_HOSTS = [
 INSTALLED_APPS = [
     'donate',
     'mapapp',
-    'social_django',
     'notifier',
     'channels',
     'ue4',

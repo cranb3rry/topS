@@ -2,6 +2,12 @@
 
 # Register your models here.
 
-from .models import TwitchIrcChannels
+from .models import TwitchIrcChannel, ChatMessage
 
-admin.site.register(TwitchIrcChannels)
+class ChatMessageAdmin(admin.ModelAdmin):
+
+    list_display = ('text', 'pub_date')
+    list_filter = ['pub_date']
+
+admin.site.register(TwitchIrcChannel)
+admin.site.register(ChatMessage, ChatMessageAdmin)

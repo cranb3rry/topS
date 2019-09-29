@@ -1,7 +1,6 @@
 import datetime
 from django.db import models
 
-
 class ChatUser(models.Model):
 	username = models.CharField(max_length=20)
 	origin = models.CharField(max_length=20)
@@ -11,13 +10,16 @@ class GttsVoiceLanguage(models.Model):
 	language = models.CharField(max_length=10)
 
 class ChatMessage(models.Model):
-	user = models.ForeignKey(ChatUser, on_delete=models.CASCADE)
-	language = models.ForeignKey(GttsVoiceLanguage, on_delete=models.CASCADE)
-	message_type = models.CharField(max_length=10)
-	question_text = models.CharField(max_length=20)
-	pub_date = models.DateTimeField('date published')
+	user = models.ForeignKey(ChatUser, on_delete=models.CASCADE, blank=True, null=True)
+	language = models.ForeignKey(GttsVoiceLanguage, on_delete=models.CASCADE, blank=True, null=True)
+	message_type = models.CharField(max_length=10, default="", blank=True, null=True)
+	speech_url = models.URLField(default="", blank=True, null=True)
+	text = models.CharField(max_length=2000)
+	pub_date = models.DateTimeField('date', auto_now_add=True)
 	def __str__(self):
-		return self.question_text
+		return self.text
 
-class TwitchIrcChannels(models.Model):
+class TwitchIrcChannel(models.Model):
 	username = models.CharField(max_length=20)
+	def __str__(self):
+		return self.username

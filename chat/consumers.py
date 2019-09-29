@@ -1,5 +1,3 @@
-
-
 from google.cloud import texttospeech
 from google.cloud import storage
 from googleapiclient.discovery import build
@@ -7,20 +5,21 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 import json, asyncio, time, uuid#, colorama
 from googleapiclient.discovery import build
 from threading import Thread as thr
+from os import environ
 
 from channels.layers import get_channel_layer
-from asgiref.sync import async_to_sync
+from channels.db import database_sync_to_async
 
 from google.cloud.texttospeech import enums
+
+from chat.models import TwitchIrcChannel, GttsVoiceLanguage, ChatMessage, ChatUser
 
 channel_layer = get_channel_layer()
 
 HOST = 'irc.chat.twitch.tv'
 PORT = 6667
-PASS = 'oauth:17gvf82i0pjx40ffg5qdilvnm8rzem'
+PASS = environ.get('TW_PASS')
 NICK = 'sn_b0t'
-irc_channels = ['sn_b0t', 'sunraylmtd', 'f0ck_the_system', 'mangalebalo',
-    'kolya_incorporated', 'xoaliro']
 
 voices_list = []
 
@@ -139,7 +138,7 @@ def tw_irc_type(message):
 #     def disconnect(self, message):
 #         pass
 
-service = build('youtube', 'v3')
+service = build('youtube', 'v3', cache_discovery=False)
 waittime = 30000
 
 logged_ids = []
@@ -193,8 +192,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
         reader, writer = await asyncio.open_connection(HOST, PORT)
         writer.write('PASS {}\r\n'.format(PASS).encode("utf-8"))
         writer.write('NICK {}\r\n'.format(NICK).encode("utf-8"))
-        for channel in irc_channels:
-            join_message = 'JOIN #'+channel+'\r\n'
+        for channel in TwitchIrcChannel.objects.all():
+            join_message = 'JOIN #'+channel.username+'\r\n'
             writer.write(join_message.encode("utf-8"))
         while True:
             data = await reader.read(1024)
@@ -244,13 +243,22 @@ class ChatConsumer(AsyncWebsocketConsumer):
             self.channel_name
         )
 
+
+
+    @database_sync_to_async
+    def log_message(self, message):
+        m = ChatMessage(text=message)
+        return m.save()
+
     # Receive message from WebSocket
     async def receive(self, text_data):
         text_data_json = json.loads(text_data)
         print(text_data)
         print(self.room_group_name)
         if 'message' in text_data_json:
-            message = text_data_json['message']
+            message = text_data_json['message']   
+
+            await self.log_message(message)
 
             # Send message to room group
             await self.channel_layer.group_send(
