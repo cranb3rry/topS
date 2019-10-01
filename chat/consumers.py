@@ -1,13 +1,16 @@
 from google.cloud import texttospeech
 from google.cloud import storage
 from googleapiclient.discovery import build
-from channels.generic.websocket import AsyncWebsocketConsumer
+from channels.generic.websocket import AsyncWebsocketConsumer, AsyncConsumer, SyncConsumer
 import json, asyncio, time, uuid#, colorama
 from googleapiclient.discovery import build
 from threading import Thread as thr
 from os import environ
+from time import sleep
 
 from channels.layers import get_channel_layer
+
+from asgiref.sync import async_to_sync
 from channels.db import database_sync_to_async
 
 from google.cloud.texttospeech import enums
@@ -50,8 +53,14 @@ def list_voices():
         # print('Natural Sample Rate Hertz: {}\n'.format(
         #     voice.natural_sample_rate_hertz))
 
+@database_sync_to_async
+def log_message(message, m_type, url, language):
+    m = ChatMessage(text=message, message_type=m_type, speech_url=url, language=language)
+    return m.save()
 
-thr(target=list_voices).start()
+def log_message_sync(message, m_type, url, language):
+    m = ChatMessage(text=message, message_type=m_type, speech_url=url, language=language)
+    return m.save()
 
 def tts(vcmessage, name, voice_preset):
 
@@ -79,9 +88,10 @@ def tts(vcmessage, name, voice_preset):
     #print(ttsmessage)
     async_to_sync(channel_layer.group_send)(                
         'voice', ttsmessage)
+    log_message_sync(name+': '+text, 'voice', blob.public_url, voice_preset)
     #return vcmesg.append(ttsmessage)
 
-def tw_irc_format(message, message_type):
+async def tw_irc_format(message, message_type):
     channel = ''
     t = time.ctime().split()[3]
     if message_type == 'PRIVMSG':
@@ -94,7 +104,15 @@ def tw_irc_format(message, message_type):
 
         # print(Fore.WHITE+t, Fore.CYAN+user+Fore.RED+'@'+
         #     Fore.MAGENTA+channel+':', Fore.YELLOW+text, end=' ')
-        
+        await channel_layer.group_send(
+        'chat_lobby',
+            {
+                'type': 'chat.message',
+                'message': message,
+            }
+        )
+        await log_message(message, 'twitch', '', '')
+
 
     if message_type == 'JOIN':
         channel = message[message.find('#'):].split()[0]
@@ -106,9 +124,8 @@ def tw_irc_format(message, message_type):
 
     #ukr(channel, message)
 
-    return
 
-def tw_irc_type(message):
+async def tw_irc_type(message):
 
     message_type = 'unknown'
 
@@ -119,45 +136,46 @@ def tw_irc_type(message):
         if kt in message:
             message_type = kt
 
-    return message_type
+    await tw_irc_format(message, message_type)
 
-# class VcmConsumer(AsyncWebsocketConsumer):
 
-#     def connect(self):
-#         self.username = "Anonymous"
-#         self.accept()
-#         self.send(text_data="[Welcome %s!]" % self.username)
+async def irc():
 
-#     def receive(self, *, text_data):
-#         if text_data.startswith("/name"):
-#             self.username = text_data[5:].strip()
-#             self.send(text_data="[set your username to %s]" % self.username)
-#         else:
-#             self.send(text_data=self.username + ": " + text_data)
+    print('startirc')
+    reader, writer = await asyncio.open_connection(HOST, PORT)
+    writer.write('PASS {}\r\n'.format(PASS).encode("utf-8"))
+    writer.write('NICK {}\r\n'.format(NICK).encode("utf-8"))
+    for channel in TwitchIrcChannel.objects.all():
+        join_message = 'JOIN #'+channel.username+'\r\n'
+        writer.write(join_message.encode("utf-8"))
+    while True:
+        data = await reader.read(1024)
+        message = data.decode()
+        print(message)
+        if message == "PING :tmi.twitch.tv\r\n":
+            writer.write('PONG :tmi.twitch.tv\r\n'.encode("utf-8"))
+        await tw_irc_type(message)
 
-#     def disconnect(self, message):
-#         pass
 
 service = build('youtube', 'v3', cache_discovery=False)
 waittime = 30000
 
 logged_ids = []
 
-
-async def log_messages(message, id):
+def log_messages(message, id):
     if id not in logged_ids:
         print(message)
-        await channel_layer.group_send(
-                'chat_lobby',
+        async_to_sync(channel_layer.group_send)(
+            'chat_lobby',
             {
                 'type': 'chat.message',
                 'message': message[4]+': '+message[1],
             }
         )
         logged_ids.append(id)
+        log_message_sync(message[4]+': '+message[1], 'youtube', '', '')
 
-
-async def ytchat():
+def ytchat():
     print('ytchat')
     while True:
         response = service.liveChatMessages().list(liveChatId=
@@ -177,49 +195,15 @@ async def ytchat():
             e['authorDetails']['channelId'],
             e['authorDetails']['displayName'],
             ]
-            await log_messages(message, message[0])
+            log_messages(message, message[0])
 
-        await asyncio.sleep(waittime/1000)
+        sleep(waittime/1000)
 
+thr(target=list_voices).start()
+thr(target=ytchat).start()
+asyncio.ensure_future(irc())
 
 class ChatConsumer(AsyncWebsocketConsumer):
-
-    irc_on = 0
-
-    async def irc(self):
-
-        print('startirc')
-        reader, writer = await asyncio.open_connection(HOST, PORT)
-        writer.write('PASS {}\r\n'.format(PASS).encode("utf-8"))
-        writer.write('NICK {}\r\n'.format(NICK).encode("utf-8"))
-        for channel in TwitchIrcChannel.objects.all():
-            join_message = 'JOIN #'+channel.username+'\r\n'
-            writer.write(join_message.encode("utf-8"))
-        while True:
-            data = await reader.read(1024)
-            message = data.decode()
-            print(message)
-            if message == '':
-                self.irct.cancel()
-                print('CANCELED')
-                self.irct = asyncio.create_task(self.irc())
-            if message == "PING :tmi.twitch.tv\r\n":
-                writer.write('PONG :tmi.twitch.tv\r\n'.encode("utf-8"))
-
-            # messages = message.splitlines()
-            # for message in messages:
-            #     message_type = tw_irc_type(message)
-            # tw_irc_format(message, message_type)
-
-            # Send message to room group
-            #await self.chat_message({'type': 'chat_message', 'message': message})
-            await self.channel_layer.group_send(
-                'chat_lobby',
-            {
-                'type': 'chat.message',
-                'message': message,
-            }
-        )
 
     async def connect(self):
 
@@ -233,6 +217,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             self.channel_name
         )
         await self.accept()
+        print(self)
         if self.room_group_name == 'chat_lobby':
             await self.send(text_data=json.dumps({'message': 'Welcome to Chat!'}))
 
@@ -243,13 +228,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
             self.channel_name
         )
 
-
-
-    @database_sync_to_async
-    def log_message(self, message):
-        m = ChatMessage(text=message)
-        return m.save()
-
     # Receive message from WebSocket
     async def receive(self, text_data):
         text_data_json = json.loads(text_data)
@@ -258,7 +236,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         if 'message' in text_data_json:
             message = text_data_json['message']   
 
-            await self.log_message(message)
+            await log_message(message, '', '', '')
 
             # Send message to room group
             await self.channel_layer.group_send(
@@ -276,24 +254,41 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def chat_message(self, event):
         message = event['message']
 
-        print(1)
-        if message == '!!':
-            if not self.irc_on and self.room_name == 'lobby':
-                self.irct = asyncio.create_task(self.irc())
-                asyncio.create_task(ytchat())
-                print(self.irct)
-                self.irc_on = 1
-        if message == '!!!':
-             self.irct.cancel()
-             print(self.irct)
-             self.irc_on = 0
+        # if message == '!!':
+        #     if not self.irc_on and self.room_name == 'lobby':
+        #         self.irct = asyncio.create_task(self.irc())
+        #         asyncio.create_task(ytchat())
+        #         print(self.irct)
+        #         self.irc_on = 1
+        # if message == '!!!':
+        #      self.irct.cancel()
+        #      print(self.irct)
+        #      self.irc_on = 0
+        
         # Send message to WebSocket
         if not message.startswith("!"):
             await self.send(text_data=json.dumps({
                 'message': message,
             }))
 
+client = ChatConsumer('test')
+print(client)
+
+class ChattyBotConsumer(SyncConsumer):
+
+    def telegram_message(self, message):
+        """
+        Simple echo handler for telegram messages in any chat.
+        """
+        print(987987)
+    async_to_sync(channel_layer.send)('telegram', {
+            "type": "telegram.message",
+            "text": "You said: ",
+        
+        })
+
 class VcmsgConsumer(AsyncWebsocketConsumer):
+
 
     async def connect(self):
 
@@ -324,13 +319,13 @@ class VcmsgConsumer(AsyncWebsocketConsumer):
         if vcmessage:
             thr(target=tts, args=(vcmessage, name, voice )).start()
         if text_data == '{"ctrl":"skip"}':
-            print(1)
-            await self.channel_layer.group_send(
-                'voice',
-                {
-                    'type': 'voice_skip',
-                }
-            )
+            if self.scope['user'].is_superuser:
+                await self.channel_layer.group_send(
+                    'voice',
+                    {
+                        'type': 'voice_skip',
+                    }
+                )
 
     async def voice_message(self, event):
         await self.send(json.dumps(event))
