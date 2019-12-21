@@ -16,5 +16,5 @@ def vcmsgwidget(request):
 def room(request, room_name):
     return render(request, 'chat/room.html', {
         'room_name_json': mark_safe(json.dumps(room_name)), 
-        'message_log': ChatMessage.objects.all()
+        'message_log': ChatMessage.objects.order_by('-pub_date')[:999]
     })

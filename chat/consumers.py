@@ -3,19 +3,21 @@ from google.cloud import storage
 from googleapiclient.discovery import build
 from channels.generic.websocket import AsyncWebsocketConsumer, AsyncConsumer, SyncConsumer
 import json, asyncio, time, uuid#, colorama
-from googleapiclient.discovery import build
 from threading import Thread as thr
 from os import environ
 from time import sleep
-
+import requests
 from channels.layers import get_channel_layer
-
+import logging
 from asgiref.sync import async_to_sync
 from channels.db import database_sync_to_async
 
 from google.cloud.texttospeech import enums
 
 from chat.models import TwitchIrcChannel, GttsVoiceLanguage, ChatMessage, ChatUser
+import websockets
+
+from yt.models import YoutubeVideo
 
 channel_layer = get_channel_layer()
 
@@ -25,6 +27,10 @@ PASS = environ.get('TW_PASS')
 NICK = 'sn_b0t'
 
 voices_list = []
+
+videos = []
+url = 'https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=UUZu-JP1plc5VlBQ1d-eG7cQ&key='+environ.get('YT_KEY')
+print(url)
 
 def list_voices():
     """Lists the available voices."""
@@ -138,25 +144,8 @@ async def tw_irc_type(message):
 
     await tw_irc_format(message, message_type)
 
-
-async def irc():
-
-    print('startirc')
-    reader, writer = await asyncio.open_connection(HOST, PORT)
-    writer.write('PASS {}\r\n'.format(PASS).encode("utf-8"))
-    writer.write('NICK {}\r\n'.format(NICK).encode("utf-8"))
-    for channel in TwitchIrcChannel.objects.all():
-        join_message = 'JOIN #'+channel.username+'\r\n'
-        writer.write(join_message.encode("utf-8"))
-    while True:
-        data = await reader.read(1024)
-        message = data.decode()
-        print(message)
-        if message == "PING :tmi.twitch.tv\r\n":
-            writer.write('PONG :tmi.twitch.tv\r\n'.encode("utf-8"))
-        await tw_irc_type(message)
-
-
+logger = logging.getLogger()
+logger.setLevel(logging.WARNING)
 service = build('youtube', 'v3', cache_discovery=False)
 waittime = 30000
 
@@ -201,12 +190,75 @@ def ytchat():
 
 thr(target=list_voices).start()
 thr(target=ytchat).start()
-asyncio.ensure_future(irc())
+
+
+async def irc():
+    print('startirc')
+    reader, writer = await asyncio.open_connection(HOST, PORT)
+    writer.write('PASS {}\r\n'.format(PASS).encode("utf-8"))
+    writer.write('NICK {}\r\n'.format(NICK).encode("utf-8"))
+
+    for channel in TwitchIrcChannel.objects.all():
+        join_message = 'JOIN #'+channel.username+'\r\n'
+        writer.write(join_message.encode("utf-8"))
+    while True:
+        data = await reader.read(1024)
+        if not data:
+            print('ircnodata')
+            break
+        message = data.decode()
+        print(message, end='')
+        if message == "PING :tmi.twitch.tv\r\n":
+            writer.write('PONG :tmi.twitch.tv\r\n'.encode("utf-8"))
+        if 'Слава Україні!' in message:
+            ch = message[message.find('#')+1:].split()[0]
+            writer.write(("PRIVMSG #"+ch+" :Героям слава!\r\n").encode("utf-8"))
+        await tw_irc_type(message)
+
+    
+    writer.close()
+    await writer.wait_closed()
+
+    await irc()
+
+
+async def hello():
+    uri = "ws://localhost/ws/chat/irc/"
+    async with websockets.connect(uri) as websocket:
+
+        while True:
+            await websocket.recv()
+
+async def hello2():
+    uri = "wss://vm.mycdn.me/chat"
+    async with websockets.connect(uri) as websocket:
+        name = """{"type":"SYSTEM","systemType":"LOGIN","loginString":"cid=1432198192771&uid=56280619395&s=edc6e8c4dc399a2c67d01992e7cb7fdbfdc3eaab","historyCount":5,"donatesHistoryCount":3,"orientationHistory":false,"lite":false,"seq":0,"version":1}"""
+
+        await websocket.send(name)
+        # print(f"> {name}")
+        while True:
+            msg = await websocket.recv()
+            print(msg)
+            if json.loads(msg)["type"] == 'TEXT':
+                msg = json.loads(msg)
+                await channel_layer.group_send(
+                'chat_lobby',
+                    {
+                        'type': 'chat.message',
+                        'message': '(ok) '+str(msg['userInfo']['firstName'])+' '+
+                        str(msg['userInfo']['lastName'])+': '+str(msg['text']),
+                    }
+                )
+
+asyncio.get_event_loop().create_task(hello())
+asyncio.get_event_loop().create_task(hello2())
+
+# asyncio.run_coroutine_threadsafe(irc(), asyncio.get_event_loop())
 
 class ChatConsumer(AsyncWebsocketConsumer):
 
     async def connect(self):
-
+        print(self.scope["headers"])
         self.room_name = self.scope['url_route']['kwargs']['room_name']
         self.room_group_name = 'chat_%s' % self.room_name
         print(self.room_name, self.room_group_name)
@@ -221,12 +273,17 @@ class ChatConsumer(AsyncWebsocketConsumer):
         if self.room_group_name == 'chat_lobby':
             await self.send(text_data=json.dumps({'message': 'Welcome to Chat!'}))
 
+        if self.room_group_name == 'chat_irc':
+            await irc()
+
+
     async def disconnect(self, close_code):
         # Leave room group
         await self.channel_layer.group_discard(
             self.room_group_name,
             self.channel_name
         )
+
 
     # Receive message from WebSocket
     async def receive(self, text_data):
@@ -253,17 +310,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
     # Receive message from room group
     async def chat_message(self, event):
         message = event['message']
-
-        # if message == '!!':
-        #     if not self.irc_on and self.room_name == 'lobby':
-        #         self.irct = asyncio.create_task(self.irc())
-        #         asyncio.create_task(ytchat())
-        #         print(self.irct)
-        #         self.irc_on = 1
-        # if message == '!!!':
-        #      self.irct.cancel()
-        #      print(self.irct)
-        #      self.irc_on = 0
         
         # Send message to WebSocket
         if not message.startswith("!"):
@@ -271,21 +317,67 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 'message': message,
             }))
 
-client = ChatConsumer('test')
-print(client)
+client = ChatConsumer('irc')
+print(client, 11)
 
-class ChattyBotConsumer(SyncConsumer):
+class ChattyBotConsumer(AsyncConsumer):
 
-    def telegram_message(self, message):
-        """
-        Simple echo handler for telegram messages in any chat.
-        """
-        print(987987)
-    async_to_sync(channel_layer.send)('telegram', {
-            "type": "telegram.message",
-            "text": "You said: ",
+    async def test(self):
+        while True:
+            await asyncio.sleep(5)
+            print(5)
         
-        })
+class YtParseConsumer(SyncConsumer):
+
+    def test(self):
+        while True:
+            time.sleep(4)
+            print(4)
+
+    def YtGetVideos(self, url, headers, count):
+
+        r = requests.get(url, headers)
+
+        while count:
+
+            video = []
+            youtube_id = ''
+            pub_date = ''
+            name = ''
+            thumbnail_high = ''
+
+            for e in r.json()['items']:
+                count-=1
+                print(e)
+                youtube_id = e['snippet']['resourceId']['videoId']
+                name = e['snippet']['title']
+                pub_date = e['snippet']['publishedAt']
+                thumbnail_high = e['snippet']['thumbnails']['high']['url']
+                print(youtube_id, name)
+                video = [youtube_id, name, pub_date, thumbnail_high]
+                videos.append(video)
+                v = YoutubeVideo(youtube_id=youtube_id, name=name, yt_thumbnail=thumbnail_high, date=pub_date[:10])          
+                v.save()
+
+            if 'nextPageToken' in r.json():
+
+                pageToken = r.json()['nextPageToken']
+                print(pageToken)
+                headers = {'pageToken': pageToken}
+                self.YtGetVideos(url, headers, count)
+            
+            break
+
+        return videos
+
+c = ChattyBotConsumer('test')
+print(c, type(c))
+# asyncio.get_event_loop().create_task(c.test())
+
+c1 = YtParseConsumer('test2')
+print(c1, type(c1))
+# YoutubeVideo.objects.all().delete()
+# thr(target=c1.YtGetVideos, args=(url, {}, 999)).start()
 
 class VcmsgConsumer(AsyncWebsocketConsumer):
 
@@ -328,7 +420,10 @@ class VcmsgConsumer(AsyncWebsocketConsumer):
                 )
 
     async def voice_message(self, event):
+        
         await self.send(json.dumps(event))
+
 
     async def voice_skip(self, event):
          await self.send(json.dumps({'':'','type':'skip'}))
+         

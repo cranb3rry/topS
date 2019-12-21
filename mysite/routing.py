@@ -15,6 +15,9 @@ application = ProtocolTypeRouter({
         ),
     ),
 
-    "telegram": ChattyBotConsumer,
+    "tm": ChattyBotConsumer,
+
+    "channel": ChannelNameRouter({
+        "irc-1": ChattyBotConsumer,}),
 
 })

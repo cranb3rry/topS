@@ -20,7 +20,7 @@ var x, y, z, ln, lt;
 function geoFindMe() {
 
 var options = {
-  enableHighAccuracy: true, 
+  enableHighAccuracy: false, 
   maximumAge        : 30000, 
   timeout           : 27000
 };
@@ -42,26 +42,49 @@ var coords = document.querySelector('.coords');
 
   if (!navigator.geolocation) {
   } else {
+
     navigator.geolocation.watchPosition(success, error, options);
   }
 
 }
+geoFindMe()
 
 var output = document.querySelector('.output');
 
+var mapSocket = new WebSocket(
+        'wss://' + window.location.host +
+        '/ws/map/');
 
+sleep = 0;
 function handleOrientation(event) {
+  if (sleep) {
   x = event.beta;  // In degree in the range [-180,180]
   y = event.gamma; // In degree in the range [-90,90]
   z = event.alpha;
+  c = event.webkitCompassHeading;
 
-  output.innerHTML = "alpha: " + z + "\n";
-  output.innerHTML  += "beta : " + x + "\n";
-  output.innerHTML += "gamma: " + y + "\n";
-  output.innerHTML += event.absolute;
+  // output.innerHTML = "alpha: " + z + "\n";
+  // output.innerHTML  += "beta : " + x + "\n";
+  // output.innerHTML += "gamma: " + y + "\n";
+  // output.innerHTML += c;
+  // event.absolute +
+  mapSocket.send(JSON.stringify({
+            'type':'geodata',
+            'x':x,
+            'y':y,
+            'z':z,
+            'ln':1,
+            'lt':2,
+        }));
+  sleep = 0;
+  }
 
 }
 
+function sleeper() {
+    sleep = 1;
+}
+setInterval(sleeper, 30);
 window.addEventListener('deviceorientationabsolute', handleOrientation);
 
 var mapSocket = new WebSocket(
@@ -69,22 +92,22 @@ var mapSocket = new WebSocket(
         '/ws/map/');
 
 
-function geodata_send() {
-  var coords = document.querySelector('.coords');
-  mapSocket.send(JSON.stringify({
-            'type':'geodata',
-            'x':x,
-            'y':y,
-            'z':z,
-            'ln':ln,
-            'lt':lt,
-        }));
-}
-geoFindMe()
+// function geodata_send() {
+//   var coords = document.querySelector('.coords');
+//   mapSocket.send(JSON.stringify({
+//             'type':'geodata',
+//             'x':x,
+//             'y':y,
+//             'z':z,
+//             'ln':ln,
+//             'lt':lt,
+//         }));
+// }
 
-mapSocket.onopen = function (event) {
-  setInterval(geodata_send,128);
-};
+
+// mapSocket.onopen = function (event) {
+//   setInterval(geodata_send,1200);
+// };
 
 </script>
         

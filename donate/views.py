@@ -5,7 +5,20 @@ from django.views.generic import ListView
 
 
 def index(request):
-    return HttpResponse("dnt")
+    return HttpResponse("""
+    <!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+</head>
+<body>
+<p>
+	<a href="https://storage.cloud.google.com/snry_ue4/ue_d01.zip?hl=ru">ue_demo_01(280mb)</a>
+</p>
+</body>
+</html>
+    
+    """)
 
 # class BookListView(ListView):
 #     model = DonateGoal
