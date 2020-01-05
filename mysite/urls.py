@@ -21,6 +21,7 @@ from chat.views import vcmsg, vcmsgwidget
 from django.urls import path
 
 urlpatterns = [
+    path('avs/', include('avs.urls')),
     path('rls/', include('donate.urls')),
     path('donate/', include('donate.urls')),
     path('map/', include('mapapp.urls')),

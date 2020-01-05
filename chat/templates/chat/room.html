@@ -29,9 +29,11 @@ right: 40px;
 
     <div id="chat-log">
     <p>
-        {% for message in message_log reversed %}
-        {{message}}<br/>
+
+    {% for m in message_log reversed %}
+        {{m}}<br/>
     {% endfor %}
+
     </p>
 
 </div><br/>
@@ -50,9 +52,90 @@ right: 40px;
 </body>
 
 <script>
+
+
+var roomName = {{ room_name_json }};
+
 var chatSocket = new WebSocket(
-        'wss://' + window.location.host +
-        '/ws/chat/' + roomName + '/');
+    'wss://' + window.location.host +
+    '/ws/chat/' + roomName + '/');
+
+chatSocket.onmessage = function(e) {
+var element = document.getElementById("chat-log");
+// element.innerHTML = "";
+var node = document.createElement("p");
+var textnode = document.createTextNode(JSON.parse(e.data)['message']+' '+'\n');    
+node.appendChild(textnode);   
+element.appendChild(node);   
+node.scrollIntoView();
+};
+
+
+chatSocket.onclose = function(e) {
+    console.error('Chat socket closed unexpectedly');
+};
+
+document.querySelector('#chat-message-input').focus();
+document.querySelector('#chat-message-input').onkeyup = function(e) {
+    if (e.keyCode === 13) {  // enter, return
+        document.querySelector('#chat-message-submit').click();
+    }
+};
+
+document.querySelector('#chat-message-submit').onclick = function(e) {
+    var messageInputDom = document.querySelector('#chat-message-input');
+    var message = messageInputDom.value;
+
+    chatSocket.send(JSON.stringify({
+        'message': message,
+        'user': 'user'
+    }));
+
+    
+    messageInputDom.value = '';
+};
+
+var wsvc = new WebSocket(
+    'wss://' + window.location.host +
+    '/ws/vcmsg/')
+
+
+wsvc.onmessage = function (event) {
+
+    console.log(event.data)
+    var msg = JSON.parse(event.data);
+    var element = document.getElementById("chat-log");
+    var node = document.createElement("p");
+    node.className+='vcmsg' 
+    switch(msg.type) {
+        case "voice_message":
+            var textnode = document.createTextNode(msg.name+': '+msg.message[0]+' ');
+            source.src = msg.message[1];
+            audio.load();
+            audio.play();
+            break
+        case "skip":
+            var textnode = document.createTextNode('skip');          
+            break
+        case "greet":
+            var textnode = document.createTextNode(msg['message']);
+            break
+        }
+        node.appendChild(textnode);
+        element.appendChild(node);
+        node.scrollIntoView();
+};
+
+
+document.querySelector('#user-message-skip').onclick = function(e) {
+    wsvc.send(JSON.stringify({
+        'ctrl': 'skip',
+    }));
+
+};
+document.querySelector('#ac').onclick = function(e) {
+    audio.volume = 0.8;
+}
 
 var x, y, z, ln, lt;
 // [x, y, z, ln, lt] = [1, 2, 3, 4, 5];
@@ -128,89 +211,6 @@ window.addEventListener('deviceorientationabsolute', handleOrientation);
 
 var audio = document.getElementById('vmplayer');
 var source = document.getElementById('vmsrc');
-
-    var roomName = {{ room_name_json }};
-
-    var chatSocket = new WebSocket(
-        'wss://' + window.location.host +
-        '/ws/chat/' + roomName + '/');
-
-    chatSocket.onmessage = function(e) {
-    var element = document.getElementById("chat-log");
-    // element.innerHTML = "";
-    var node = document.createElement("p");
-    var textnode = document.createTextNode(JSON.parse(e.data)['message']+' '+'\n');    
-    node.appendChild(textnode);   
-    element.appendChild(node);   
-    node.scrollIntoView();
-    };
-
-
-    chatSocket.onclose = function(e) {
-        console.error('Chat socket closed unexpectedly');
-    };
-
-    document.querySelector('#chat-message-input').focus();
-    document.querySelector('#chat-message-input').onkeyup = function(e) {
-        if (e.keyCode === 13) {  // enter, return
-            document.querySelector('#chat-message-submit').click();
-        }
-    };
-
-    document.querySelector('#chat-message-submit').onclick = function(e) {
-        var messageInputDom = document.querySelector('#chat-message-input');
-        var message = messageInputDom.value;
-
-        chatSocket.send(JSON.stringify({
-            'message': message,
-            'user': 'user'
-        }));
-
-        
-        messageInputDom.value = '';
-    };
-
-    var wsvc = new WebSocket(
-        'wss://' + window.location.host +
-        '/ws/vcmsg/')
-
-
-wsvc.onmessage = function (event) {
-
-    console.log(event.data)
-    var msg = JSON.parse(event.data);
-    var element = document.getElementById("chat-log");
-    var node = document.createElement("p");
-    node.className+='vcmsg' 
-    switch(msg.type) {
-        case "voice_message":
-            var textnode = document.createTextNode(msg.name+': '+msg.message[0]+' ');
-            source.src = msg.message[1];
-            audio.load();
-            audio.play();
-            break
-        case "skip":
-            var textnode = document.createTextNode('skip');          
-            break
-        case "greet":
-            var textnode = document.createTextNode(msg['message']);
-            break
-        }
-        node.appendChild(textnode);
-        element.appendChild(node);
-        node.scrollIntoView();
-};
-
-
-document.querySelector('#user-message-skip').onclick = function(e) {
-    wsvc.send(JSON.stringify({
-        'ctrl': 'skip',
-    }));
-
-};
-document.querySelector('#ac').onclick = function(e) {
-    audio.volume = 0.8;
-}
 
 </script>
 </html>
