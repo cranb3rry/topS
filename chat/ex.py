@@ -29,10 +29,6 @@ async def printdq():
 
 async def ok_websocket2(websocket):
         ts = str(time.time_ns())
-        msg = '{"type":"TEXT","text":"6456456","uuid":'+ts[:13]+',"seq":1,"version":1}'
-        
-        await websocket.send(msg)
-        print(msg)
         while True:
             await asyncio.sleep(.2)
 

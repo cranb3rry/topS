@@ -12,6 +12,21 @@
         font-style: Bold;
         font-size: 200%;
 }
+
+.dnt {
+    color: lime;
+}
+
+.dnt2 {
+    font-size: 150%;
+    color: aqua;
+}
+
+.dnt3 {
+    font-size: 125%;
+    color: aqua;
+}
+
 </style>
 <body>
 <audio id='vmplayer'>
@@ -19,55 +34,93 @@
 Your browser does not support the audio element.
 </audio>
 
-<p id='text'></p>
+<p id='out'></p>
 <script type="text/javascript">
 
     var ws = new WebSocket(
         'wss://' + window.location.host +
         '/ws/vcmsg/')
-    var text = document.getElementById("text");
-    var node = document.createElement("span");
 
-    text.innerHTML = "";
+    var output = document.getElementById("out");
+
+    output.innerHTML = "";
 
 ws.onmessage = function (event) {
 
+    var name = document.createElement("span");
+    var message = document.createElement("span");
+    var donate = document.createElement("span");
+    var audio = document.getElementById('vmplayer');
+    var source = document.getElementById('vmsrc');
+
     console.log(event.data)
     var msg = JSON.parse(event.data);
+
     switch(msg.type) {
 
         case "voice_message":
-            var audio = document.getElementById('vmplayer');
-            var source = document.getElementById('vmsrc');
-            var textnode = document.createTextNode(msg.name+': '+msg.message[0]+' ');
-            node.appendChild(textnode); 
-            text.appendChild(node);
+            var nametext = document.createTextNode(msg.name);
+            var messagetext = document.createTextNode(': '+msg.message[0]+' ');
+
+            name.appendChild(nametext); 
+            message.appendChild(messagetext); 
+
+            output.appendChild(name);
+            output.appendChild(message);
+
+            if (msg.donate) {
+
+                message.className+='dnt'
+                name.className+='dnt3'
+    
+                var donatetext = document.createTextNode(msg.donate[0]);
+                if (msg.donate[1] == 'RUB') {
+                    var donatetext = document.createTextNode(msg.donate[0]+ '₽');
+                }
+
+                donate.className+='dnt2'
+                donate.appendChild(donatetext); 
+                output.appendChild(donate);
+
+                source.src = msg.message[1]
+                audio.load()
+                audio.play();
+
+                setTimeout(function(){
+                    out.innerHTML = ""
+                }, 8000);
+                break
+
+            }
+
             source.src = msg.message[1]
             audio.load()
-            audio.play(); //call this to play the song right away
-            audio.onended = function() {
-                text.removeChild(node);
-                node.removeChild(textnode);
+            audio.play();
 
-            };
+            setTimeout(function(){
+                    out.innerHTML = ""
+                }, 8000);
+            
             break
         case "skip":
             console.log('skip')
+            
             var audio = document.getElementById('vmplayer');
             audio.pause()
             node.innerHTML = "";
-            text.innerHTML = "skipped"
+            output.innerHTML = "skipped"
             setTimeout(function(){
                  text.innerHTML = ""
             }, 2000);         
             break
         case "greet":
+            message = document.createElement("span");
             var textnode = document.createTextNode(msg.message);
-            node.appendChild(textnode);
-            text.appendChild(node);
+            message.appendChild(textnode);
+            output.appendChild(message);
             setTimeout(function(){
-                text.removeChild(node);
-                node.removeChild(textnode);
+                output.removeChild(message);
+                message.removeChild(textnode);
             }, 2000);   
         // } else if ("tts" in JSON.parse(event.data)) {
 

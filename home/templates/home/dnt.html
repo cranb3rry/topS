@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<style>
+@import url('https://fonts.googleapis.com/css?family=Roboto+Mono&display=swap');
+@font-face {
+	font-family: 'Antiquarius';
+	src: url('/static/home/Antiquarius.ttf');}
+
+body {
+     
+         background-color: #f7f7f8;
+         font-family:  Antiquarius;
+         font-size: 100%;
+         }
+a {color: black;
+	text-decoration: none;
+     
+}
+li {
+     /* transition: all .4s ease; */
+	border-style: solid;
+	border-width: 0px 0px 0px 0px;
+	display: inline;
+}
+/* aside {
+     font-family: 'Roboto Mono', monospace;
+     font-size: 24px;
+	width: 60%;
+	float: right;
+	position: relative;
+} */
+img {
+     height: 270px;
+     width: 480px;
+     object-fit: cover;
+}    
+#content {
+	padding: 0px;
+	margin: 0px 0px 8px 0px;
+	float: left;
+	width: 30%;
+}
+.views {
+     color: #f03a17;
+     font-size: 32px;
+}
+
+.toomany {
+     color: purple;
+}
+
+</style>
+	<title> ❄️</title>
+<//head>
+<body>
+<div id="content">
+
+    <p>kolya 160$</br>stas_saintninja 5$</br>f0ck_the_system 3.5$</br>adolf 0.9$</br>thormatador 0.2$</br>skilanz 0.1$</br>monika 0.1$</br></p>
+
+
+</div>
+
+<aside id="right">
+<p>
+     <del>3700X ryzen</del></br>
+     i5 3570k</br>
+     7870 AMD</br>
+</p>
+<p id='description'></p>
+
+</aside>
+
+<script>
+function mouseOver(x) {
+//   document.getElementById("description").innerText = x.dataset.name;
+document.getElementById("description").innerHTML = data[x.id-1][1]+', '+
+'<span class="views">'+data[x.id-1][0]+'</span>'+'</br>'+
+data[x.id-1][2]+'</br>'+data[x.id-1][3]+
+'</br><img src="/media/yttn/'+data[x.id-1][4]+'yttn.jpg" alt="youtube thumbnail">';
+}
+function mouseOut(x) {
+     // document.getElementById("description").style.color = "black";
+}
+var data = [{% for v in videos %} ['{{v.views}}', '{{v.name}}', '{{v.date}}', '{{v.duration}}', '{{v.id}}'], {% endfor %}]
+
+</script>
+</body>

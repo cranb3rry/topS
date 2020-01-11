@@ -4,6 +4,8 @@ from django.utils.safestring import mark_safe
 import json
 from chat.models import ChatMessage
 
+voices_list = []
+
 def index(request):
     return render(request, 'chat/index.html', {})
 

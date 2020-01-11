@@ -13,3 +13,6 @@ def index(request):
         'home/index.html',
      
     )
+
+def dnt(request):
+    return render(request, 'home/dnt.html', {})

@@ -24,6 +24,10 @@ right: 40px;
 
  } */
 
+.vcmsgdnt {
+    color: lime;
+}
+
 </style>
 <body>
 
@@ -109,10 +113,20 @@ wsvc.onmessage = function (event) {
     node.className+='vcmsg' 
     switch(msg.type) {
         case "voice_message":
+            if (msg.donate) {
+                console.log(msg.donate)
+                node.className+='dnt' 
+                var textnode = document.createTextNode(msg.name+' '+msg.donate+': '+msg.message[0]+' ');
+                source.src = msg.message[1];
+                audio.load();
+                audio.play();
+                break
+            }
             var textnode = document.createTextNode(msg.name+': '+msg.message[0]+' ');
             source.src = msg.message[1];
             audio.load();
             audio.play();
+            console.log(msg)
             break
         case "skip":
             var textnode = document.createTextNode('skip');          
