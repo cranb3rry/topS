@@ -16,3 +16,6 @@ def index(request):
 
 def dnt(request):
     return render(request, 'home/dnt.html', {})
+
+def pdl(request):
+    return render(request, 'home/pdl.html', {})
