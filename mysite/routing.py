@@ -13,10 +13,10 @@ application = ProtocolTypeRouter({
     ),
 
     "channel": ChannelNameRouter({
-        "qw": QwDntConsumer,
-        "tasks": TaskConsumer,
-        "tw": TwitchChatConsumer,
-        "ok": OkChatConsumer}),
+        "qw": QwDntConsumer(),
+        "tasks": TaskConsumer(),
+        "tw": TwitchChatConsumer(),
+        "ok": OkChatConsumer()}),
 
 
 })

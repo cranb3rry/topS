@@ -16,8 +16,6 @@ from avs.views import ytgetvideos, url
 import urllib.request
 import aiohttp
 
-# from google.cloud.texttospeech import enums
-
 from chat.views import voices_list
 from chat.models import TwitchIrcChannel, GttsVoiceLanguage, ChatMessage, ChatUser
 import websockets
@@ -45,7 +43,7 @@ def list_voices():
 
         # # Display the voice's name. Example: tpc-vocoded
         # print('Name: {}'.format(voice.name))
-        ssml_gender = enums.SsmlVoiceGender(voice.ssml_gender)
+        ssml_gender = texttospeech.SsmlVoiceGender(voice.ssml_gender)
         # # Display the supported language codes for this voice. Example: "en-US"
         # for language_code in voice.language_codes:
         #     #print('Supported language: {}'.format(language_code))
@@ -85,15 +83,15 @@ def tts(vcmessage, name, voice_preset, donate):
     if len(text) > 256:
         text = text[:255]
     client = texttospeech.TextToSpeechClient()
-    synthesis_input = texttospeech.types.SynthesisInput(text=text)
+    synthesis_input = texttospeech.SynthesisInput(text=text)
 
-    voice = texttospeech.types.VoiceSelectionParams(
+    voice = texttospeech.VoiceSelectionParams(
         language_code=voice_preset[:-10],
         name=voice_preset)
 
-    audio_config = texttospeech.types.AudioConfig(
-        audio_encoding=texttospeech.enums.AudioEncoding.MP3)
-    response = client.synthesize_speech(synthesis_input, voice, audio_config)
+    audio_config = texttospeech.AudioConfig(
+        audio_encoding=texttospeech.AudioEncoding.MP3)
+    response = client.synthesize_speech(input=synthesis_input, voice=voice, audio_config=audio_config)
     storage_client = storage.Client()
     bucket = storage_client.get_bucket('snry_bucket')
     blob = bucket.blob(str(uuid.uuid4().hex)+'.mp3')
@@ -336,7 +334,7 @@ class TaskConsumer(AsyncConsumer):
         if not self.switch:
             
             # thr(target=list_voices).start()
-            thr(target=ytchat).start()
+            # thr(target=ytchat).start()
 
             self.switch = 1
 
