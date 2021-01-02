@@ -19,3 +19,6 @@ def dnt(request):
 
 def pdl(request):
     return render(request, 'home/pdl.html', {})
+
+def pxs(request):
+    return render(request, 'home/pxs.html', {})

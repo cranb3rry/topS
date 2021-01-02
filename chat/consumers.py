@@ -16,15 +16,13 @@ from avs.views import ytgetvideos, url
 import urllib.request
 import aiohttp
 
-from google.cloud.texttospeech import enums
+# from google.cloud.texttospeech import enums
 
 from chat.views import voices_list
 from chat.models import TwitchIrcChannel, GttsVoiceLanguage, ChatMessage, ChatUser
 import websockets
 
 channel_layer = get_channel_layer()
-
-
 
 HOST = 'irc.chat.twitch.tv'
 PORT = 6667
@@ -110,7 +108,7 @@ def tts(vcmessage, name, voice_preset, donate):
     async_to_sync(channel_layer.group_send)(                
         'voice', ttsmessage)
     log_message_sync(name+': '+text, 'voice', blob.public_url, voice_preset)
-    #return vcmesg.append(ttsmessage)
+    # return vcmesg.append(ttsmessage)
 
 async def tw_irc_format(message, message_type):
     channel = ''
@@ -129,7 +127,10 @@ async def tw_irc_format(message, message_type):
         'chat_lobby',
             {
                 'type': 'chat.message',
-                'message': message,
+                'message': text,
+                'origin': 'twitch',
+                'channel': channel,
+                'user': user
             }
         )
         if channel == 'sunraylmtd' and text[0:2] == '! ':
@@ -177,6 +178,7 @@ def log_messages(message, id):
             'chat_lobby',
             {
                 'type': 'chat.message',
+                'origin': 'youtube',
                 'message': message[4]+': '+message[1],
             }
         )
@@ -205,7 +207,7 @@ def ytchat():
             ]
             log_messages(message, message[0])
 
-        sleep(waittime/1000)
+        sleep(waittime/500)
 
 async def hello():
     await asyncio.sleep(3)
@@ -255,7 +257,9 @@ class OkChatConsumer(AsyncConsumer):
         self.switch = 1
         uri = "wss://vm.mycdn.me/chat"
         async with websockets.connect(uri) as websocket:
-            name = """{"type":"SYSTEM","systemType":"LOGIN","loginString":"cid=1432198192771&uid=56280619395&s=edc6e8c4dc399a2c67d01992e7cb7fdbfdc3eaab","historyCount":5,"donatesHistoryCount":3,"orientationHistory":false,"lite":false,"seq":0,"version":1}"""
+            name = """{"type":"SYSTEM","systemType":"LOGIN","loginString":
+            "cid=1432198192771&uid=56280619395&s=edc6e8c4dc399a2c67d01992e7cb7fdbfdc3eaab","historyCount":5,
+            "donatesHistoryCount":3,"orientationHistory":false,"lite":false,"seq":0,"version":1}"""
 
             await websocket.send(name)
             # print(f"> {name}")
@@ -293,9 +297,13 @@ class TwitchChatConsumer(AsyncConsumer):
             writer.write('PASS {}\r\n'.format(PASS).encode("utf-8"))
             writer.write('NICK {}\r\n'.format(NICK).encode("utf-8"))
 
-            for channel in TwitchIrcChannel.objects.all():
-                join_message = 'JOIN #'+channel.username+'\r\n'
-                writer.write(join_message.encode("utf-8"))
+            @database_sync_to_async
+            def join_twitch(channels):
+                for channel in channels:
+                    join_message = 'JOIN #'+channel.username+'\r\n'
+                    writer.write(join_message.encode("utf-8"))
+
+            await join_twitch(TwitchIrcChannel.objects.all())
                 
             while True:
                 data = await reader.read(1024)
@@ -372,31 +380,33 @@ class ChatConsumer(AsyncWebsocketConsumer):
         print(text_data)
         print(self.room_group_name)
         if 'message' in text_data_json:
-            message = text_data_json['message']   
+            message = text_data_json['message']
+            user = text_data_json['user']
 
-            await log_message(message, '', '', '')
+            # await log_message(message, '', '', '')
 
             # Send message to room group
-            await self.channel_layer.group_send(
-                self.room_group_name,
-                {
-                    'type': 'chat.message',
-                    'message': message,
-                }
-            )
+            # await self.channel_layer.group_send(
+            #     self.room_group_name,
+            #     {
+            #         'type': 'chat.message',
+            #         'message': message,
+            #         'user': user,
+            #         'origin': self.room_group_name,
+            #     }
+            # )
         if 'vcm' in text_data_json:
             vcm = text_data_json['vcm']
             print(vcm + ' is a voice message')
 
     # Receive message from room group
     async def chat_message(self, event):
+
         message = event['message']
-        
+    
         # Send message to WebSocket
         if not message.startswith("!"):
-            await self.send(text_data=json.dumps({
-                'message': message,
-            }))
+            await self.send(text_data=json.dumps(event))
 
     def YtGetVideos(self, url, headers, count):
 

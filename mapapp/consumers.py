@@ -5,9 +5,9 @@ from threading import Thread as thr
 class MapGetConsumer(AsyncWebsocketConsumer):
 
     async def connect(self):
-        self.user = self.scope["user"]
-        if str(self.user) == 'archie':
-            await self.accept()
+        # self.user = self.scope["user"]
+        # if str(self.user) == 'archie':
+        await self.accept()
 
     async def disconnect(self, close_code):
         pass

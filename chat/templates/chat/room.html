@@ -10,24 +10,19 @@
 <style type="text/css">
     p {
   margin: 4px;
-  
+
 }
 
 audio { 
    display:none;
 }
 
- /* iframe {
-    position: fixed;
-bottom: 400px; 
-right: 40px;
-
- } */
-
 .vcmsgdnt {
     color: lime;
 }
-
+.twitch {
+    color: gray;
+}
 </style>
 <body>
 
@@ -45,6 +40,7 @@ right: 40px;
     <input id="chat-message-submit" type="button" value="Send"/>
       <input id="user-message-skip" type="button" value="Skip"/>
       <input id='ac' type="button" value="vcon"/>
+    <input id="fs" onclick="openFullscreen();" type="button" value="FS"></input>
 
 
       <pre class="output"></pre>
@@ -58,6 +54,20 @@ right: 40px;
 <script>
 
 
+var elem = document.documentElement;
+function openFullscreen() {
+  if (elem.requestFullscreen) {
+    elem.requestFullscreen();
+  } else if (elem.mozRequestFullScreen) { /* Firefox */
+    elem.mozRequestFullScreen();
+  } else if (elem.webkitRequestFullscreen) { /* Chrome, Safari & Opera */
+    elem.webkitRequestFullscreen();
+  } else if (elem.msRequestFullscreen) { /* IE/Edge */
+    elem.msRequestFullscreen();
+  }
+}
+
+
 var roomName = {{ room_name_json }};
 
 var chatSocket = new WebSocket(
@@ -65,10 +75,34 @@ var chatSocket = new WebSocket(
     '/ws/chat/' + roomName + '/');
 
 chatSocket.onmessage = function(e) {
+
 var element = document.getElementById("chat-log");
-// element.innerHTML = "";
 var node = document.createElement("p");
-var textnode = document.createTextNode(JSON.parse(e.data)['message']+' '+'\n');    
+
+var obj = JSON.parse(e.data);
+
+var message =  obj.message;
+var type =  obj.type;
+var user = obj.user;
+var origin =  obj.origin;
+var channel = obj.channel;
+
+switch (origin) {
+    case "twitch":
+        var textnode = document.createTextNode(user+'@'+channel+': '+message+' '+'\n');
+        node.className+='twitch'
+        if (channel == 'sunraylmtd' || user == 'sunraylmtd') {
+            node.className+='owner'
+        }
+        break
+    default:
+        var textnode = document.createTextNode(message+'\n');
+        break
+
+}
+
+
+
 node.appendChild(textnode);   
 element.appendChild(node);   
 node.scrollIntoView();
